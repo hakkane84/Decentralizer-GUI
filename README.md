@@ -78,6 +78,8 @@ Install Node.js / NPM. Install `electron` in dev mode. The following scripts are
 * `npm run packager-mac`
 * `npm run packager-linux`
 
+The compiled apps will be saved on the `release-builds` folder.
+
 ## Donations
 
 Siacoin: `bde3467039a6d9a563224330ff7578a027205f1f2738e1e0daf134d8ded1878cf5870c41927d`
