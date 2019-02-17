@@ -12,6 +12,8 @@ A tool for Sia renters that allows:
 
 Ready-to-use binaries for Windows, MacOS and Linux can be downloaded here: https://github.com/hakkane84/Decentralizer-GUI/releases
 
+Users of headless servers or preferring command line interfaces can use Decentralizer-CLI instead, which brings the same features: https://github.com/hakkane84/Decentralizer-CLI
+
 ## User guide
 
 The "Quick tour" button on the side menu briefly explains all the functions of Decentralizer.
@@ -26,6 +28,8 @@ The list bellow shows details about each contract. Hover the mouse over the valu
 
 Keep in mind that the **cancelling contracts will incur Siacoin expenses**: new contracts will be formed, data will be uploaded to the replacement hosts and if you don't have the files locally anymore, the files will be downloaded first from the rest of available hosts (incurring download expenses).
 
+![screenshot](https://github.com/hakkane84/Decentralizer-GUI/blob/master/screenshot1.jpg)
+
 ### Farms tab
 
 The first section shows your contracts with unsafe hosts. Unsafe hosts are identified and flagged by SiaStats.info (https://siastats.info/hosting_farms): hosts threatening with Sybil attacks and other dangers. It is highly recommended to cancel contracts with all of them.
@@ -36,7 +40,23 @@ The "Recommended selection" button will automatically mark all the unsafe hosts,
 
 The "Cancel selected contracts" will immediately cancel the currently selected contracts.
 
+![screenshot](https://github.com/hakkane84/Decentralizer-GUI/blob/master/screenshot2.jpg)
+
 ### Hosts filter tab
+
+The toggle on the top allows to change the behavior of the filter:
+
+* "Disable": no filtering of hosts. If applied to Sia, all the hosts will become available again.
+* "Whitelist": only the selected hosts will be used by Sia to form contracts.
+* "Blacklist: all the selected hosts
+
+In whitelist mode, unsafe hosts (labelled with a warning icon) are automatically excluded. In blacklist mode, these unsafe hosts are automatically added to the list. This behavior of the app can't be changed, due to safety reasons.
+
+All your selections will be saved automatically, so you can navigate to other tabs, change the "order by" option or close Decentralizer without losing your selections. **Selecting hosts does not include them to the Sia filter automatically: the selection becomes effective only after pressing the "Apply filter to Sia button**.
+
+Keep in mind that **creating a restrictive filter can incur in higher expenses and/or limit the ability to reach the desired redundancy**: By limiting the pool of possible hosts, the chances that the remaining hosts have a pricing higher than a default contract set are considerable. If the list is too restrictive, it can limit the ability of Sia of reaching the default number of contracts, limiting the redundancy of files.
+
+![screenshot](https://github.com/hakkane84/Decentralizer-GUI/blob/master/screenshot3.jpg)
 
 ## Changes log
 ### v1.0
