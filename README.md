@@ -74,9 +74,9 @@ If the filter leaves out hosts you already have contracts with, **these contract
 
 Install Node.js / NPM. Install `electron` in dev mode. The following scripts are available for easy compiling:
 
-* `npm run packager-win`
-* `npm run packager-mac`
-* `npm run packager-linux`
+* `npm run package-win`
+* `npm run package-mac`
+* `npm run package-linux`
 
 The compiled apps will be saved on the `release-builds` folder.
 
