@@ -1,0 +1,349 @@
+body {
+    font-family: 'Lato', sans-serif;
+    background: #eee; 
+}
+
+.mega-container {
+    height: calc(100% - 110px);
+    width: calc(100% - 275px);
+    position: absolute;
+    top: 100;
+    left: 250;
+    overflow: auto;
+}
+
+.button-scan {
+    height: 70px; 
+    width: 70px; 
+    color: #fff; 
+    background-color: #728081;
+    border: 1px solid #fff;
+    border-radius: 10px;
+}
+.button-scan:hover {
+    background-color: #1bc859;
+    transition: all 0.3s ease 0s;
+}
+
+.button-next {
+    position: absolute;
+    bottom: 100px; 
+    width: 120px; 
+    height: 50px; 
+    cursor: pointer;
+    background-color: #203030;
+    color: #fff;
+    border: 1px solid #fff;
+    border-radius: 10px;
+    font-size: 150%
+}
+.button-next:hover {
+    background-color: #1bc859;
+    transition: all 0.3s ease 0s;
+}
+
+.footer {
+    position: fixed;
+    left: 250;
+    bottom: 0;
+    width: calc(100% - 275px);
+    background-color: #728081;
+    color: #fff;
+    text-align: left;
+}
+
+/* Navigation side bar */
+nav {
+    width: 250px;
+    height: calc(100% - 110px);
+    position: absolute;
+    top: 100;
+    left: 0;
+    background: #41494a;
+    margin: 0px 0px 0px 8px;
+    color: #ddd
+}
+
+article {
+    margin-left: 260px;
+}
+
+/* Navigation bar table */
+.table-nav {
+    text-align: right; 
+    font-size: 20px; 
+    font-weight: 400;
+    width: 100%
+}
+
+.table-nav th {
+    border-top: 3px solid #41494a;
+    border-bottom: 1px solid #ddd;
+    border-right: 5px solid #ddd;
+    height: 50px;
+    padding: 0px 20px;
+    transition: all 0.3s ease 0s;
+}
+
+.th-selected {
+    border-bottom:1px solid #ddd;
+    border-right: 15px solid #1bc859;
+    height: 50px;
+    padding: 0px 20px;
+    transition: all 0.3s ease 0s;
+}
+
+
+
+/* Rest of tables */
+.table-content table{
+    text-align: left; 
+    font-size: 16px; 
+    font-weight: 400;
+    width: 100%;
+    border-spacing: 0px;
+}
+.table-content th {
+    border-bottom: 5px solid #888;
+    height: 35px;
+    padding: 0px 5px
+}
+.table-content td {
+    border-bottom: 1px solid #777;
+    height: 35px;
+    font-size: 16px;
+    padding: 0px 5px
+}
+
+.table-content tr:hover {
+    transition: all 0.2s ease 0s;
+    background-color: #ccc
+}
+
+
+
+/* Tooltip container */
+.tooltip {
+    position: relative;
+    display: inline-block;
+    border-bottom: 1px dotted black; /* If you want dots under the hoverable text */
+}
+/* Tooltip text */
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 200px;
+    background-color: #455;
+    color: #fff;
+    text-align: center;
+    padding: 5px 10px;
+    border-radius: 6px;
+
+    /* Position the tooltip text */
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -125px;
+
+    /* Fade in tooltip */
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+/* Tooltip arrow */
+.tooltip .tooltiptext::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #555 transparent transparent transparent;
+}
+/* Show the tooltip text when you mouse over the tooltip container */
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+} 
+
+
+/* Toogles and checkboxes */
+.container2 {
+    display: block;
+    position: relative;
+    padding-left: 35px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    font-size: 16px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+/* Hide the browser's default radio button */
+.container2 input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+/* Create a custom radio button */
+.checkmark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 25px;
+    width: 25px;
+    background-color: #eee;
+    border-radius: 50%;
+}
+/* On mouse-over, add a grey background color */
+.container2:hover input ~ .checkmark {
+    background-color: #ccc;
+}
+/* When the radio button is checked, add a blue background */
+.container2 input:checked ~ .checkmark {
+    background-color: #1bc859;
+} 
+/* Create the indicator (the dot/circle - hidden when not checked) */
+.checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+/* Show the indicator (dot/circle) when checked */
+.container2 input:checked ~ .checkmark:after {
+    display: block;
+}
+/* Style the indicator (dot/circle) */
+.container2 .checkmark:after {
+       top: 9px;
+      left: 9px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: white;
+}
+/* Customize the label (the container) */
+.container3 {
+    display: block;
+    position: relative;
+    padding-left: 35px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    font-size: 18px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+/* Hide the browser's default checkbox */
+.container3 input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+/* Create a custom checkbox */
+.checkmark3 {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 25px;
+    width: 25px;
+    background-color: #eee;
+}
+/* On mouse-over, add a grey background color */
+.container3:hover input ~ .checkmark3 {
+    background-color: #ccc;
+}
+/* When the checkbox is checked, add a blue background */
+.container3 input:checked ~ .checkmark3 {
+    background-color: #1bc859;
+}
+/* Create the checkmark/indicator (hidden when not checked) */
+.checkmark3:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+/* Show the checkmark when checked */
+.container3 input:checked ~ .checkmark3:after {
+    display: block;
+}
+  
+/* Style the checkmark/indicator */
+.container3 .checkmark3:after {
+    left: 9px;
+    top: 5px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 3px 3px 0;
+    -webkit-transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    transform: rotate(45deg);
+} 
+
+
+/* OVERLAY */
+/* The Overlay (background) */
+.overlay {
+    /* Height & width depends on how you want to reveal the overlay (see JS below) */    
+    height: 0;
+    width: 100%;
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    background-color: rgb(255,255,255); /* Black fallback color */
+    background-color: rgba(255,255,255, 0.8); /* Black w/opacity */
+    overflow-x: hidden; /* Disable horizontal scroll */
+    transition: 0.5s; /* 0.5 second transition effect to slide in or slide down the overlay (height or width, depending on reveal) */
+}
+  
+/* Position the content inside the overlay */
+.overlay-content {
+    position: relative;
+    top: 30%; /* 25% from the top */
+    text-align: center;
+    vertical-align: middle;
+    height: 250px; 
+    width: 500px; 
+    border-radius: 20px; 
+    background-color: #203030; 
+    color: white; 
+    margin: 0 auto;
+    padding: 50px 10px 0px 10px
+}
+
+
+/* Fonts */
+@font-face {
+    font-family: 'Lato';
+    font-style: italic;
+    font-weight: 400;
+    src: local('Lato Italic'), local('Lato-Italic'), url(lato-italic.woff2) format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: 'Lato';
+    font-style: italic;
+    font-weight: 700;
+    src: local('Lato Bold Italic'), local('Lato-BoldItalic'), url(lato-bolditalic.woff2) format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: 'Lato';
+    font-style: normal;
+    font-weight: 400;
+    src: local('Lato Regular'), local('Lato-Regular'), url(lato-regular.woff2) format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: 'Lato';
+    font-style: normal;
+    font-weight: 700;
+    src: local('Lato Bold'), local('Lato-Bold'), url(lato-bold.woff2) format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}

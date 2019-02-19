@@ -1,0 +1,427 @@
+<!--
+Decentralizer-UI - Pluging for Sia-UI mapping contracts, showing farms and enabling manual hosts pickup 
+Developed by hakkane
+https://keops.cc
+-->
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Decentralizer</title>
+
+		<script src="../js/world-highres3.js"></script>
+		<script src="../node_modules/proj4/dist/proj4.js"></script>
+		<link rel='stylesheet' href='../css/styles.css'>
+		<link rel='stylesheet' href='../css/flags.css'>
+		<link rel="stylesheet" href="../css/awesomefont/css/all.css">
+
+	</head>
+
+	<body>
+		<!-- Main Container -->
+		<div class="frame">
+
+			<!-- Header -->
+			<div class="header" style="background-color: #728081; color: #fff; max-height: 100px; padding: 0px 25px; font-size: 24pt; margin: 0px">
+				<img src="../assets/logo_w.png" alt="logo" height="50" width="50" style="vertical-align: middle; margin: 25px 0px"/>
+				<span style="vertical-align: middle;">Decentralizer</span>
+				<div style="float: right; font-size: 20%; margin: 15px 0px 0px 0px;">
+					<button type="button" class="button-scan" style="cursor: pointer" onclick="openScan()">
+						<div><i class="fas fa-sync" style="font-size: 200%"></i></div>
+						<div style="padding: 5px 0px 0px 0px">Scan</div>
+					</button> 
+				</div>
+				<div style="float: right; font-size: 45%; margin: 25px 50px 0px 0px">
+					Hosts analyzed: <span id="hostsNum">-</span>
+					<br> Contracts analyzed: <span id="contractsNum">-</span>
+					<br> Last scan: <span id="lastScan">-</span>
+				</div>
+				
+			</div>
+			
+				
+			<article>
+				<nav>
+					<table class="table-nav">
+						<thead>
+							<tr>
+								<th id="nav1">
+									<div onclick="tabContractsShow()" style="cursor: pointer">Contracts</div>
+								</th>
+							</tr>
+							<tr>
+								<th id="nav2">
+									<div onclick="tabFarmsShow()" style="cursor: pointer">
+										Farms
+										<span id="alertIcon"></span>
+									</div>
+								</th>
+							</tr>
+							<tr>
+								<th id="nav3">
+									<div onclick="tabHostsShow()" style="cursor: pointer">Hosts filter</div>
+								</th>
+							</tr>
+							<tr>
+								<th id="nav4">
+									<div onclick="tabAboutShow()" style="cursor: pointer">About</div>
+								</th>
+							</tr>
+							<tr>
+								<th>
+									<div onclick="quickTour1()" style="cursor: pointer">Quick tour</div>
+								</th>
+							</tr>
+							<!-- 
+							<tr>
+								<th id="nav5">
+									<a href="index.html" style="text-decoration: none; color:#ddd">
+										<span>Reload</span>
+									</a>
+								</th>
+							</tr>
+							-->
+						</thead>
+					</table>
+				</nav>
+
+				<div class="mega-container">
+
+					<div id="no-databases" style="display: none;">
+						<div style="padding: 30px 50px; font-size: 26px; color: #728081; text-align: right">
+							To start, press the "Scan" button 
+							<i class="fas fa-chevron-circle-up" style="font-size: 100%"></i>
+						</div>
+					</div>
+
+					<div id="tab-contracts" style="display: none">
+						<div id="container-map" class="table-content" style="height: 450px; margin: 25px;"></div>
+						<div id="table-contracts" class="table-content" style="margin: 25px; background-color: #fff"></div>
+						<div style="height: 40px; background-color: #728081; color: #fff; text-align: center; padding: 35px 0px;">
+							<button type="button" onclick="cancelContracts()"
+								class="button-scan" style="width: 200px; height: 35px; vertical-align: middle; margin: 0px 25px 0px 0px; cursor: pointer">
+									<i class="fas fa-ban" style="font-size: 100%"></i> Cancel selected contracts
+							</button>
+						</div>
+					</div>
+
+
+					<div id="tab-farms" style="display: none">
+						<div style="padding: 50px 25px 0px 25px; font-size: 26px; color: #728081;">
+							<i class="fas fa-exclamation-triangle"></i> Unsafe farms:
+						</div>
+						<div id="dangerousFarms"></div>
+						<div style="padding: 50px 25px 0px 25px; font-size: 26px; color: #728081;">
+							Other farms:
+						</div>
+						<div id="otherFarms"></div>
+
+						<div class="footer" style="text-align: center; padding: 15px">
+							<button type="button" onclick="autoFarms()"
+								class="button-scan" style="width: 200px; height: 35px; vertical-align: middle; margin: 0px 25px 0px 0px; cursor: pointer">
+									<i class="far fa-check-square" style="font-size: 100%"></i> Recommended selection
+							</button>
+							<button type="button" onclick="cancelFarms()" class="button-scan" style="width: 200px; height: 35px; vertical-align: middle; cursor: pointer">
+								<i class="fas fa-ban" style="font-size: 100%"></i> Cancel selected contracts
+							</button>
+						</div>
+					</div>
+
+					<div id="tab-about" style="display: none">
+						<div style="padding: 50px 25px 0px 25px; font-size: 26px; color: #728081;"> 
+							Decentralizer-GUI version 1.0
+						</div>
+						<div style="padding: 25px 25px 0px 25px;">
+							An open source project by Salva Herrera / Keops.cc &#169 2019
+							<br><br><i class='fab fa-github'></i> https://github.com/hakkane84/Decentralizer-GUI
+							<br><br><i class='fas fa-external-link-alt'></i> https://keops.cc/Decentralizer
+						</div>
+						<div style="padding: 50px 25px 0px 25px; font-size: 26px; color: #728081;"> 
+							Feedback, questions?
+						</div>
+						<div style="padding: 25px 25px 0px 25px;">
+							<i class='fas fa-envelope'></i> keops_cc@outlook.com
+							<br><br><i class='fab fa-discord'></i> @Hakkane#0489
+							<br><br><i class='fab fa-twitter'></i> @SiaStats / @SalvaHerrera4
+						</div>
+						<div style="padding: 50px 25px 0px 25px; font-size: 26px; color: #728081;"> 
+							Donations
+						</div>
+						<div style="padding: 25px 25px 0px 25px;">
+							<strong>SC:</strong> bde3467039a6d9a563224330ff7578a027205f1f2738e1e0daf134d8ded1878cf5870c41927d 
+						</div>
+
+					</div>
+
+
+					<div id="tab-hosts" style="display: none">
+						<div style="width: calc(100%-50px); height: 160px; background-color: #bbb; margin: 25px; padding: 25px">
+							<div style="float: left">
+								<span style="font-size: 16pt; font-weight: 600">Filter mode:</span>
+								
+								<label class="container2" style="margin: 20px 0px 10px 0px">
+									<div class="tooltip">Disabled
+										<span class="tooltiptext">
+											All hosts will be available to form contracts with on Sia
+										</span>							
+									</div>
+									<input type="radio" name="radio" value="r1" id="r1">
+									<span class="checkmark"></span>
+								</label>
+								<label class="container2" style="margin: 20px 0px 10px 0px">
+									<div class="tooltip">Whitelist
+										<span class="tooltiptext">
+											Sia will only form contracts with hosts among the selected list
+										</span>							
+									</div>
+									<input type="radio" name="radio" value="r2" id="r2">
+									<span class="checkmark"></span>
+								</label>
+								<label class="container2" style="margin: 20px 0px 10px 0px">
+									<div class="tooltip">Blacklist
+										<span class="tooltiptext">
+											Sia will exclude the selected hosts during contract formtion
+										</span>							
+									</div>
+									<input type="radio" name="radio" value="r3" id="r3">
+									<span class="checkmark"></span>
+								</label>
+							</div>
+
+							<div style="float: right">
+								<label class="container3" style="margin: 25px 0px 0px 0px; display: none" id="farmsToggle">
+									<div class="tooltip"><span id="farmsText"></span>
+										<span class="tooltiptext" style="font-size: 12pt" id="farmsTooltip">
+										</span>							
+									</div>
+									<input type="checkbox" id="clickFarms" onchange="clickFarms()">
+									<span class="checkmark3"></span>
+								</label>
+								
+								<div style="margin: 25px 0px 0px 0px; font-size: 14pt">
+									Order by:
+									<select id="orderByDropdown" style="float: right; margin: 5px 0px 0px 0px;" onChange="hostsOrderBy(value)">
+										<option value="country">Country</option>
+										<option value="version">Software version</option>
+										<option value="rank">Rank</option>
+										<option value="storage">Storage price</option>
+										<option value="upload">Upload price</option>
+										<option value="download">Download price</option>
+										<option value="collateral">Collateral</option>
+									</select>
+
+									<br><br> Show:
+									<select id="showDropdown" style="float: right; margin: 5px 0px 0px 0px" onChange="changeShownHosts(value)">
+										<option value="all">All</option>
+										<option value="onlySelected">Only selected</option>
+									</select> 
+								</div>
+							</div>
+
+						</div>
+						
+						<div id="hosts-table-content"></div>
+
+						<div class="footer">
+							<div style="float: left; margin: 15px; font-size: 10pt">
+								Filter mode: <span id="summaryMode"></span><br>
+								<span style="font-size: 14pt">Selected hosts: <span id="summaryHosts"></span></span>
+							</div>
+							<div style="float: right; margin: 17px 25px 0px 0px">
+								<button type="button" onclick="clearFilter()"
+									class="button-scan" style="width: 150px; height: 35px; vertical-align: middle; margin: 0px 25px 0px 0px; cursor: pointer">
+										<i class="far fa-trash-alt" style="font-size: 100%"></i> Clear selection
+								</button>
+								<button type="button" onclick="preFilter()" class="button-scan" style="width: 150px; height: 35px; vertical-align: middle; cursor: pointer">
+									<i class="fas fa-filter" style="font-size: 100%"></i> Apply filter to Sia
+								</button>
+							</div>
+						</div>
+					</div>
+
+				</div>
+				
+			</article>
+			
+			
+		</div>
+
+
+		<!-- Overlay for syncing/ canceling/ applying filter -->
+		<div id="overlay" class="overlay">
+		
+			<!-- Overlay content -->
+			<div class="overlay-content" id="overlayBox">
+
+					<span id="overlayIcon" style="font-size: 70px"></span>
+					<br>
+					<br>
+					<span id="overlayMessage"></span>
+					<br>
+					<span id="overlayButtons"></span>
+
+			</div>
+
+			
+			<!-- Quick tour contents -->
+
+			<div id="tourNextButton" style="text-align: center; display: none;"></div>
+
+			<div id="tour1" style="display: none;">
+				<div style="padding: 100px 50px; font-size: 22px; color: #000; text-align: right; font-weight: bold">
+						<i class="fas fa-chevron-circle-up" style="font-size: 150%"></i>
+						<br>To start, press the "Scan" button.
+						<br>Decentralizer will analyze your contracts and the hosts list.
+						<br>Use it every time you open the App.
+				</div>
+			</div>
+			<div id="tour2" style="display: none;">
+				<div style="padding: 120px 0px 0px 260px; font-size: 22px; color: #000; text-align: left; font-weight: bold">
+					<i class="fas fa-chevron-circle-left" style="font-size: 150%; float: left"></i>
+					<div style="float: left; padding: 0px 15px">"Contracts" will show your contracts with
+						<br>hosts on a map and allow you
+						<br>to cancel them individually
+					</div>
+				</div>
+			</div>
+			<div id="tour3" style="display: none;">
+				<div style="padding: 180px 0px 0px 260px; font-size: 22px; color: #000; text-align: left; font-weight: bold">
+					<i class="fas fa-chevron-circle-left" style="font-size: 120%; float: left"></i>
+					<div style="float: left; padding: 0px 15px">"Farms" allows you to cancel contracts with
+						<br>farms. Hosting farms are entities/individuals
+						<br>controlling multiple hosts, cheating the system.
+						<br>This reduces the geographic dispersion of your
+						<br>data and represents a risk.
+					</div>
+				</div>
+			</div>
+			<div id="tour4" style="display: none;">
+				<div style="padding: 160px 0px 0px 510px; font-size: 22px; color: #000; text-align: left; font-weight: bold">
+					<i class="fas fa-chevron-circle-left" style="font-size: 120%; float: left"></i>
+					<div style="float: left; width: 400px; padding: 0px 0px 0px 10px">
+						"Unsafe farms" display farms identified by SiaStats as dangerous (for example, Sybil attackers).
+						<br> The rest of the farms are shown bellow.
+					</div>
+				</div>
+			</div>
+			<div id="tour5" style="display: none;">
+				<div style="padding: 0px 20px 0px 0px; position: absolute; bottom: 150px; right: 20px; font-size: 22px; color: #000; font-weight: bold">
+					<div style="width: 450px">
+						Use "Recommended selection" or mark the checkboxes on each host to be removed.
+						<br>Then click on "Cancel selected contracts"
+					</div>
+					<i class="fas fa-chevron-circle-down" style="font-size: 120%; padding: 10px 0px 0px 200px"></i>
+				</div>
+			</div>
+			<div id="tour6" style="display: none;">
+				<div style="padding: 240px 0px 0px 260px; font-size: 24px; color: #000; text-align: left; font-weight: bold">
+					<i class="fas fa-chevron-circle-left" style="font-size: 120%; float: left"></i>
+					<div style="float: left; padding: 0px 15px">With "Hosts filter" you can select the repertory
+						<br>of potential hosts Sia will use to form contracts
+					</div>
+				</div>
+			</div>
+			<div id="tour7" style="display: none;">
+				<div style="padding: 100px 0px 0px 270px; font-size: 22px; color: #000; text-align: left; font-weight: bold">
+					<div style="width: 300px">
+						Select between creating a whitelist or a blacklist
+					</div>
+					<i class="fas fa-chevron-circle-down" style="font-size: 120%; padding: 10px 0px 0px 100px"></i>
+				</div>
+				<div style="position: absolute; top: 140px; right: 70px; font-size: 22px; color: #000; text-align: left; font-weight: bold">
+					<div style="width: 350px">
+						This shows the hosts arranged by country, Sia version, pricing...
+					</div>
+					<i class="fas fa-chevron-circle-down" style="font-size: 120%; padding: 10px 0px 0px 100px"></i>
+				</div>
+				<div style="position: absolute; top: 420px; left: 320px; font-size: 26px; color: #000; text-align: left; font-weight: bold">
+					<div style="width: 500px">
+						Your selections are saved automatically.
+						<br> You can quit Decentralizer and 
+						<br>resume where you left it
+					</div>
+				</div>
+			</div>
+			<div id="tour8" style="display: none;">
+				<div style="position: absolute; top: 350px; left: 320px; font-size: 24px; color: #000; text-align: left; font-weight: bold">
+					<div style="width: 600px">
+						Take in mind that the more restrictive your list
+						<br>is, the higher the prices you'll probably
+						<br>pay for storage
+					</div>
+				</div>
+				<div style="padding: 0px 20px 0px 0px; position: absolute; bottom: 80px; right: 0px; font-size: 22px; color: #000; font-weight: bold">
+					<div style="width: 250px">
+						Click here to apply the filter to Sia
+					</div>
+					<i class="fas fa-chevron-circle-down" style="font-size: 120%; padding: 10px 0px 0px 150px"></i>
+				</div>
+			</div>			
+			
+		</div>
+
+
+		<script>
+			// NAVIGATION
+
+			function tabContractsShow() {
+				$("#tab-contracts").fadeIn();
+				$("#tab-hosts").fadeOut();
+				$("#tab-farms").fadeOut();
+				$("#tab-about").fadeOut();
+				document.getElementById("nav2").style.borderRight = "5px solid #ddd";
+				document.getElementById("nav3").style.borderRight = "5px solid #ddd";
+				document.getElementById("nav4").style.borderRight = "5px solid #ddd";
+				document.getElementById("nav1").style.borderRight = "15px solid #1bc859";
+			}
+
+			function tabFarmsShow() {
+				$("#tab-contracts").fadeOut();
+				$("#tab-hosts").fadeOut();
+				$("#tab-farms").fadeIn();
+				$("#tab-about").fadeOut();
+				document.getElementById("nav2").style.borderRight = "15px solid #1bc859";
+				document.getElementById("nav3").style.borderRight = "5px solid #ddd";
+				document.getElementById("nav4").style.borderRight = "5px solid #ddd";
+				document.getElementById("nav1").style.borderRight = "5px solid #ddd";
+			}
+
+			function tabHostsShow() {
+				$("#tab-contracts").fadeOut();
+				$("#tab-hosts").fadeIn();
+				$("#tab-farms").fadeOut();
+				$("#tab-about").fadeOut();
+				document.getElementById("nav1").style.borderRight = "5px solid #ddd";
+				document.getElementById("nav2").style.borderRight = "5px solid #ddd";
+				document.getElementById("nav4").style.borderRight = "5px solid #ddd";
+				document.getElementById("nav3").style.borderRight = "15px solid #1bc859";
+			}
+
+			function tabAboutShow() {
+				$("#tab-contracts").fadeOut();
+				$("#tab-hosts").fadeOut();
+				$("#tab-farms").fadeOut();
+				$("#tab-about").fadeIn();
+				document.getElementById("nav1").style.borderRight = "5px solid #ddd";
+				document.getElementById("nav2").style.borderRight = "5px solid #ddd";
+				document.getElementById("nav4").style.borderRight = "15px solid #1bc859";
+				document.getElementById("nav3").style.borderRight = "5px solid #ddd";
+			}
+
+			function missingFiles() {
+				// Specific stuff on fail of any of the loaded files
+				$("#no-databases").fadeIn();
+				$("#tab-contracts").fadeOut();
+				$("#tab-hosts").fadeOut();
+				$("#tab-farms").fadeOut();
+				$("#tab-about").fadeOut();
+			}
+
+		</script>
+		
+		<script type='text/javascript' src='../js/decentralizer.js'></script>
+		<script type='text/javascript' src='../js/sia_functions.js'></script>
+	</body>
+</html>
