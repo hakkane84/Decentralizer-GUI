@@ -70,6 +70,12 @@ If the filter leaves out hosts you already have contracts with, **these contract
 ### v1.0
 * Initial release
 
+## License
+
+Decentralizer is an open source project offered under the GNU GPLv3 license. Briefly, it means that if you want to distribute a modified version of this software you need to 1) make your changes open source, 2) keep the GNU GPLv3 license, 3) respect and show the authorship of the code.
+
+The easiest way to comply with this is simply using the cloning button of this repository into your own GitHub repository!
+
 ## Compiling from source
 
 Install Node.js / NPM. Install `electron` in dev mode. The following scripts are available for easy compiling:
