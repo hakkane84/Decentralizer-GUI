@@ -144,8 +144,9 @@ function siaHosts(siastatsGeoloc, siastatsFarms) {
             }
             var hostdb = active
             
-            document.getElementById("overlayMessage").innerHTML = "Retreived " + hostdb.length + " hosts from Sia"
-            hostsProcessing(siastatsGeoloc, siastatsFarms, hostdb)
+            document.getElementById("overlayMessage").innerHTML = "Retrieving " + hostdb.length + " hosts data from Sia"
+            var hostNum = 0
+            hostsScore(siastatsGeoloc, siastatsFarms, hostdb, hostNum)
         })
         .catch((err) => {
             document.getElementById("overlayMessage").innerHTML = "Error retrieving data from Sia. Is Sia working, synced and connected to internet? Try again after restarting Sia."
@@ -156,6 +157,45 @@ function siaHosts(siastatsGeoloc, siastatsFarms) {
         document.getElementById("overlayMessage").innerHTML = "Error connecting to Sia. Start the Sia app (either daemon or UI) and try again"
         errorOverlay()
     })
+}
+
+
+function hostsScore(siastatsGeoloc, siastatsFarms, active, hostNum) {
+    // Iterates on each host to collect from Sia the score of the host
+    if (hostNum < active.length) {
+        sia.connect('localhost:9980')
+        .then((siad) => {siad.call('/hostdb/hosts/' + active[hostNum].publickeystring)
+            .then((host) => {
+                var score = host.scorebreakdown.conversionrate
+                active[hostNum].score = score
+                hostNum++
+                hostsScore(siastatsGeoloc, siastatsFarms, active, hostNum)
+            })
+            .catch((err) => {
+                document.getElementById("overlayMessage").innerHTML = "A - Error retrieving data from Sia. Is Sia working, synced and connected to internet? Try again after restarting Sia."
+                errorOverlay()
+            })
+        })
+        .catch((err) => {
+            document.getElementById("overlayMessage").innerHTML = "Error connecting to Sia. Start the Sia app (either daemon or UI) and try again"
+            errorOverlay()
+        })
+
+    } else {
+        // We are done. Move to the next step
+        
+        // Arranges the hosts array by score
+        function compare(a,b) {
+            if (a.score < b.score)
+                return -1;
+            if (a.score > b.score)
+                return 1;
+            return 0;
+        }
+        active.sort(compare);
+
+        hostsProcessing(siastatsGeoloc, siastatsFarms, active)
+    }
 }
 
 
