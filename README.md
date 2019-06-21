@@ -7,7 +7,7 @@ Website: https://keops.cc/decentralizer
 A tool for Sia renters that allows:
 
 * a) Micro-managing and data visualization about the formed contracts.
-* b) Creating filters of hosts, according to geolocation, Sia version, pricing and/or manual selection.
+* b) Creating filters of hosts, according to geolocation, Sia version, SiaStats performance score, pricing and/or manual selection.
 * c) Detection of hosting farms and unsafe hosts, allowing cancelling contracts with them and/or filter them out. "Farms" represent multiple hosts sharing geolocation, most pprobably being controlled by the same opeprator. Centralization of hosts is problematic, as it implicates that redundant copies of the files are being stored in the same location (what defeats the purpose of the redundancy). It also exposes the renter to malicious hosts performing a sybil attack by denying acccess to files after controling a large enough number of hosts.
 
 Ready-to-use binaries for Windows, MacOS and Linux can be downloaded here: https://github.com/hakkane84/Decentralizer-GUI/releases
@@ -54,7 +54,7 @@ In whitelist mode, unsafe hosts (labelled with a warning icon) are automatically
 
 In whitelist mode, a checkbox allowing to exclude farms will be available. Marking this will still allow one host per farm. In blacklist mode, this checkbox will instead allow to include the farms. Again, one host per farm will be left out of the filter.
 
-The "Order by" drop-down menu allows to re-arrange the list of hosts according to their country, used Sia version or different pricing parameters. In the case of showing by country, an additional checkbox allows to mark all the hosts in the European Economic Area (The EU, plus Iceland, Norway and Liechtenstein).
+The "Order by" drop-down menu allows to re-arrange the list of hosts according to their country, used Sia version, SiaStats performance score or different pricing parameters. In the case of showing by country, an additional checkbox allows to mark all the hosts in the European Economic Area (The EU, plus Iceland, Norway and Liechtenstein).
 
 The "Show" drop-down menu allows to toggle between displaying all the hosts or just those already marked (facilitating additional filtering).
 
@@ -67,7 +67,14 @@ If the filter leaves out hosts you already have contracts with, **these contract
 ![screenshot](https://github.com/hakkane84/Decentralizer-GUI/blob/master/screenshot3.jpg)
 
 ## Changes log
+
+## v1.1
+
+* Added SiaStats performance score to the tables of hosts and contracts. Hosts can be filtered according to this score
+* Added a contracts timeline chart to represent graphically the % of coins spent on each contract, their expected termination date, the billing period and their grace period
+
 ### v1.0
+
 * Initial release
 
 ## License

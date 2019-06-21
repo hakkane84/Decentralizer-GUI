@@ -98,6 +98,7 @@ https://keops.cc
 
 					<div id="tab-contracts" style="display: none">
 						<div id="container-map" class="table-content" style="height: 450px; margin: 25px;"></div>
+						<div id="container-timeline" class="table-content" style="margin: 25px; height: 200px"></div>
 						<div id="table-contracts" class="table-content" style="margin: 25px; background-color: #fff"></div>
 						<div style="height: 40px; background-color: #728081; color: #fff; text-align: center; padding: 35px 0px;">
 							<button type="button" onclick="cancelContracts()"
@@ -131,7 +132,7 @@ https://keops.cc
 
 					<div id="tab-about" style="display: none">
 						<div style="padding: 50px 25px 0px 25px; font-size: 26px; color: #728081;"> 
-							Decentralizer-GUI version 1.0
+							Decentralizer-GUI version 1.1
 						</div>
 						<div style="padding: 25px 25px 0px 25px;">
 							An open source project by Salva Herrera / Keops.cc &#169 2019
@@ -204,6 +205,7 @@ https://keops.cc
 									Order by:
 									<select id="orderByDropdown" style="float: right; margin: 5px 0px 0px 0px;" onChange="hostsOrderBy(value)">
 										<option value="country">Country</option>
+										<option value="score">SiaStats score</option>
 										<option value="version">Software version</option>
 										<option value="rank">Rank</option>
 										<option value="storage">Storage price</option>

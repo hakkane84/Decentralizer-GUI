@@ -20,6 +20,8 @@ function createWindow () {
   win.loadFile('app/index.html')
 
   // Open the DevTools.
+  // Uncomment for troubleshooting (it opens a console logs terminal)
+  /////////////////////////////////////
   //win.webContents.openDevTools()
 
   // Emitted when the window is closed.
