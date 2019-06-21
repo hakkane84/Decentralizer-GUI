@@ -24,6 +24,8 @@ In first place, and each time you open Decentralizer, use the "Scan" button to r
 
 A map with the geolocation of all the contracted hosts is shown, connected with green lines to the current position of the renter.
 
+The map is followed by a timeline representation of all the active contracts. For each contract, the billing period and the grace period (formerly known in Sia as the "renew window") are represented. Additional details are shown hovering the mouse over them. Over the billing period, in a dark gray percenrtage bar and an overlayed text, the percentage of coins already spent on the contract is shown.
+
 The list bellow shows details about each contract. Hover the mouse over the coin value of each contract to get more details about the financials. Use the checkboxes on each contract, and the button at the bottom of the list, to cancel the desired contracts. Sia will form contracts with replacement hosts afterwards. 
 
 Keep in mind that the **cancelling contracts will incur Siacoin expenses**: new contracts will be formed, data will be uploaded to the replacement hosts and if you don't have the files locally anymore, the files will be downloaded first from the rest of available hosts (incurring in download expenses).
@@ -41,6 +43,8 @@ The "Recommended selection" button will automatically mark all the unsafe hosts,
 The "Cancel selected contracts" will immediately cancel the currently selected contracts.
 
 ![screenshot](https://github.com/hakkane84/Decentralizer-GUI/blob/master/screenshot2.jpg)
+
+![screenshot](https://github.com/hakkane84/Decentralizer-GUI/blob/master/screenshot4.jpg)
 
 ### Hosts filter tab
 
