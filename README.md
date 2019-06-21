@@ -32,6 +32,8 @@ Keep in mind that the **cancelling contracts will incur Siacoin expenses**: new 
 
 ![screenshot](https://github.com/hakkane84/Decentralizer-GUI/blob/master/screenshot1.jpg)
 
+![screenshot](https://github.com/hakkane84/Decentralizer-GUI/blob/master/screenshot4.jpg)
+
 ### Farms tab
 
 The first section shows your contracts with unsafe hosts. Unsafe hosts are identified and flagged by SiaStats.info (https://siastats.info/hosting_farms): hosts threatening with Sybil attacks and other dangers. It is highly recommended to cancel contracts with all of them.
@@ -43,8 +45,6 @@ The "Recommended selection" button will automatically mark all the unsafe hosts,
 The "Cancel selected contracts" will immediately cancel the currently selected contracts.
 
 ![screenshot](https://github.com/hakkane84/Decentralizer-GUI/blob/master/screenshot2.jpg)
-
-![screenshot](https://github.com/hakkane84/Decentralizer-GUI/blob/master/screenshot4.jpg)
 
 ### Hosts filter tab
 
