@@ -72,7 +72,7 @@ If the filter leaves out hosts you already have contracts with, **these contract
 
 ## Changes log
 
-## v1.1
+### v1.1
 
 * Added SiaStats performance score to the tables of hosts and contracts. Hosts can be filtered according to this score
 * Added a contracts timeline chart to represent graphically the % of coins spent on each contract, their expected termination date, the billing period and their grace period
