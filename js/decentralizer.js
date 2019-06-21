@@ -6,7 +6,9 @@
 
 var $ = require('jquery')
 var axios = require('axios')
-var Highcharts = require('highcharts/highmaps')
+var Highmaps = require('highcharts/highmaps')
+var Highcharts = require('highcharts')
+require('highcharts/modules/xrange')(Highcharts); // xrange module, for contracts timeline
 var fs = require('fs')
 var path = require('path')
 
@@ -70,7 +72,7 @@ function initialLoad() {
                         }
                         
                         // Initialize the chart
-                        var chart = Highcharts.mapChart('container-map', {
+                        var chart = Highmaps.mapChart('container-map', {
 
                             title: {
                                 text: 'Contracted storage providers',
@@ -115,13 +117,13 @@ function initialLoad() {
                                     marker: {
                                         fillColor: '#FFFFFF',
                                         lineWidth: 2,
-                                        lineColor: Highcharts.getOptions().colors[1]
+                                        lineColor: Highmaps.getOptions().colors[1]
                                     }
                                 }
                             },
 
                             series: [{
-                                mapData: Highcharts.maps['custom/world-highres3'],
+                                mapData: Highmaps.maps['custom/world-highres3'],
                                 name: 'Basemap',
                                 borderColor: '#a8a8a8',
                                 nullColor: '#fff',
@@ -129,7 +131,7 @@ function initialLoad() {
                             }, {
                                 name: 'Separators',
                                 type: 'mapline',
-                                data: Highcharts.geojson(Highcharts.maps['custom/world-highres3'], 'mapline'),
+                                data: Highmaps.geojson(Highmaps.maps['custom/world-highres3'], 'mapline'),
                                 showInLegend: false,
                                 enableMouseTracking: false
                             }, {
@@ -165,7 +167,123 @@ function initialLoad() {
                             color: '#1bc859',
                             data: paths
                         });
+                        
 
+                        if (settings.consensusHeight != null && settings.renewWindow != null) { // Avoids issues first time the user updates to 1.1
+                            // Processing contracts for the timeline
+                            var timeline = []
+                            var labels = []
+                            for (var i = 0; i < contracts.length; i++) {
+                                var startDate = settings.lastsync - ((settings.consensusHeight - contracts[i].startheight) * 600000)
+                                var renewDate = startDate + ((contracts[i].endheight - contracts[i].startheight - settings.renewWindow) * 600000)
+                                var endDate = settings.lastsync + ((contracts[i].endheight - settings.consensusHeight) * 600000)
+                                var spentPercentage = parseInt(((contracts[i].totalcost - contracts[i].renterfunds) / contracts[i].totalcost) * 100)
+                                if (contracts[i].goodforrenew == true) {
+                                    var colorRenew = "#ddd"
+                                    var textRenew = "Grace period"
+                                } else {
+                                    var colorRenew = "#cc6666"
+                                    var textRenew = "Grace peroid"
+                                }
+                                timeline.push({ // Pre-renew span
+                                    x: startDate,
+                                    x2: renewDate,
+                                    y: i,
+                                    partialFill: spentPercentage/100,
+                                    color: "#999",
+                                    spentPercentage: spentPercentage,
+                                    dataLabels: {
+                                        enabled: true,
+                                        format: '{point.spentPercentage}% spent',
+                                    },
+                                    tooltipText: "<b>Billing period</b>: " + simplifiedTimestamp(startDate) + " - " + simplifiedTimestamp(renewDate)
+                                        + "<br>" + contracts[i].netaddress
+                                        + "<br>Contract cost: " + legibleSc(contracts[i].totalcost) + "<br>Spent: " + legibleSc((contracts[i].totalcost - contracts[i].renterfunds))
+                                        + "<br>- Storage: " + legibleSc(contracts[i].StorageSpending) + "<br>- Upload: " + legibleSc(contracts[i].uploadspending) 
+                                        + "<br>- Download: " + legibleSc(contracts[i].downloadspending) + "<br>- Fees: " + legibleSc(contracts[i].fees) 
+                                        + "<br>Remaining funds: " + legibleSc(contracts[i].renterfunds)
+                                        + "<br><br>Stored data: " + (contracts[i].size/1000000000).toFixed(2) + " GB"
+                                })
+                                timeline.push({ // Renew window/grace period
+                                    x: renewDate,
+                                    x2: endDate,
+                                    y: i,
+                                    color: colorRenew,
+                                    dataLabels: {
+                                        enabled: true,
+                                        format: textRenew,
+                                        style: {fontWeight: "normal"}
+                                    },
+                                    tooltipText: "<b>Grace period</b>: " + simplifiedTimestamp(renewDate) + " - " + simplifiedTimestamp(endDate)
+                                        + "<br> <i>(formerly: renew window)</i>"
+                                })
+                                // Adding details to the grace period tooltip
+                                if (contracts[i].goodforrenew == true) {
+                                    timeline[timeline.length-1].tooltipText = timeline[timeline.length-1].tooltipText
+                                        + "<br>This contract <b>will</b> be extended <br>if your Sia client is online"
+                                } else {
+                                    timeline[timeline.length-1].tooltipText = timeline[timeline.length-1].tooltipText
+                                        + "<br>This contract <b>will not</b> be extended, <br>and will be replaced by another host"
+                                }
+                                labels.push(contracts[i].netaddress)
+                            }
+
+                            // Adjusting the heigth of the timeline container to the number of contracts
+                            document.getElementById('container-timeline').style.height = ((17 * contracts.length) + 100) + "px"
+
+                            // Initialize the timeline of contracts chart
+                            var timestamp = Date.now()
+                            var chart = Highcharts.chart('container-timeline', {
+                                chart: {
+                                    type: 'xrange'
+                                },
+                                title: {
+                                    text: 'Contracts timeline',
+                                    style: {
+                                        color:"#555",
+                                        fontSize:'18px',
+                                        fontWeight: '900'
+                                    }
+                                },
+                                xAxis: {
+                                    type: 'datetime',
+                                    plotLines: [{
+                                        color: '#1bc859',
+                                        width: 3,
+                                        value: timestamp,
+                                        zIndex: 5,
+                                    }],
+                                    gridLineWidth: 2,
+                                    gridLineDashStyle: 'dash',
+                                },
+                                yAxis: {
+                                    title: {
+                                        text: ''
+                                    },
+                                    categories: labels,
+                                    reversed: true,
+                                },
+                                legend: {enabled: false},
+                                credits: {enabled:false},
+                                tooltip: {
+                                    headerFormat: '',
+                                    pointFormat: '{point.tooltipText}',
+                                    backgroundColor: '#445555',
+                                    borderRadius: 10,
+                                    style: {
+                                        color: '#ffffff',
+                                    }
+                                },
+                                series: [{
+                                    borderColor: 'gray',
+                                    pointWidth: 14,
+                                    data: timeline,
+                                }]
+                            })
+                        } else {
+                            // Hide the contracts timeline
+                            $("#container-timeline").hide();
+                        }
 
                         function timeConverter(UNIX_timestamp){
                             var a = new Date(UNIX_timestamp * 1000);
@@ -181,6 +299,19 @@ function initialLoad() {
                             if (sec < 10) {sec = "0" + sec}
                             var time = date + ' ' + month + ' ' + year + ' - ' + hour + ':' + min + ':' + sec ;
                             return time;
+                        }
+
+                        function simplifiedTimestamp(UNIX_timestamp) {
+                            var a = new Date(UNIX_timestamp);
+                            var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                            var month = months[a.getMonth()];
+                            var date = a.getDate();
+                            var time = date + ' ' + month
+                            return time;
+                        }
+
+                        function legibleSc(coins) {
+                            return (coins/1000000000000000000000000).toFixed(2) + " SC"
                         }
 
 
@@ -218,7 +349,10 @@ function initialLoad() {
                                     + '<th><span>Host</span></th>'
                                     + '<th><span>Data stored</span></th>'
                                     + '<th><span>Value</span></th>'
-                                    + '<th><span>Renewing</span></th>'
+                                    + '<th><span>'
+                                        + '<div class="tooltip">SiaStats Score' 
+                                            + '<span style="font-weight: normal" class="tooltiptext">Performance scores (on a 0-10 scale) provided by the SiaStats Hosts Monitor</span></div>'
+                                        + '</span></th>'
                                     + '<th><span>Online</span></th>'
                                 + '</tr>'
 
@@ -270,12 +404,16 @@ function initialLoad() {
                                         + '</div>'
                                     + '</td>'
 
-                            // Good for renew?
-                            if (contracts[i].goodforrenew == true) {
-                                tableContracts = tableContracts + '<td><i class="fas fa-check-circle" style="color: #44cc44"></i></td>'
-                            } else {
-                                tableContracts = tableContracts + '<td><i class="fas fa-times-circle" style="color: #cc4444"></i></td>'
+                            // SiaStats scores
+                            var scoreCircleColor = "#000"
+                            if (contracts[i].siastatsScore == null) { // No score, results of migrating from previous Decentralizer version
+                                contracts[i].siastatsScore = "-"
+                                scoreCircleColor = "#cc4444"
+                            } else if (contracts[i].siastatsScore == "0") { // Score 0: red background
+                                scoreCircleColor = "#cc4444"
                             }
+                            tableContracts = tableContracts + '<td style="padding: 0px 0px 0px 20px"><span style="background-color: ' + scoreCircleColor 
+                                + '; color: #fff; border-radius: 15px; padding: 0px 5px;">' + contracts[i].siastatsScore + '</span></td>'
 
                             // Online?
                             if (contracts[i].online == true) {
@@ -453,7 +591,7 @@ function hostsOrderByCountry(settings, hosts, farmsDefinition) {
                                 + '<th style="width: 10px">'
                                     + '<input type="checkbox" id="checkCountry' + countries[i].countryCode + '" onchange="clickCountry(this)">'
                                 + '</th>'
-                                + '<th colspan="7">'
+                                + '<th colspan="8">'
                                     + '<span class="f32">'
                                         + '<span class="flag ' + (countries[i].countryCode).toLowerCase() + '"></span>'
                                         + '<span style="vertical-align: middle;"> ' + countries[i].countryName + ' - ' + countries[i].hosts + ' hosts</span>'
@@ -476,6 +614,17 @@ function hostsOrderByCountry(settings, hosts, farmsDefinition) {
                     // Checking box
                     if (countries[i].hostsList[j].onList == true) {
                         content = content + " checked"
+                    }
+
+                    // Score check
+                    if (countries[i].hostsList[j].siastatsScore == null) {
+                        countries[i].hostsList[j].siastatsScore = "-"
+                    }
+                    // Score circle color
+                    if (countries[i].hostsList[j].siastatsScore == "-" || countries[i].hostsList[j].siastatsScore == "0") {
+                        var scoreCircleColor = "#cc4444"
+                    } else {
+                        var scoreCircleColor = "#000"
                     }
                                 
                     content = content + ' onchange="clickHost(this)">'
@@ -505,6 +654,10 @@ function hostsOrderByCountry(settings, hosts, farmsDefinition) {
                             + '<td style="font-size: 14px; height: 25px"><span>Down: ' + parseInt(countries[i].hostsList[j].downloadbandwidthprice/1000000000000) + ' SC/TB</span></td>'
                             + '<td style="font-size: 14px; height: 25px"><span>Collateral: ' + (countries[i].hostsList[j].collateral / countries[i].hostsList[j].storageprice).toFixed(1) + 'x </span></td>'
                             + '<td style="font-size: 14px; height: 25px"><span>Rank #' + countries[i].hostsList[j].rank + '</span></td>'
+                            + '<td style="font-size: 14px; height: 25px; padding: 0px 5px"><div class="tooltip" style="border-bottom: 0px">'
+                                + '<span style="background-color: ' + scoreCircleColor + '; color: #fff; border-radius: 15px; padding: 0px 5px;">' + countries[i].hostsList[j].siastatsScore 
+                                    + '<span class="tooltiptext" style="width: 100px; margin-left: -75px">Performance benchmarked by the SiaStats Hosts Monitor</span>'
+                                + '</span></div></td>'
                         + '</tr>'
                 }
             }
@@ -557,7 +710,9 @@ function hostsOrderBy(value) {
                 if (value == "country") {
                     hostsOrderByCountry(settings, hosts, farmsDefinition)
                 } else if (value == "version") {
-                    hostsOrderByVersion(settings, hosts, farmsDefinition)
+                    hostsOrderByVersionOrScore(settings, hosts, farmsDefinition, "version")
+                } else if (value == "score") {
+                    hostsOrderByVersionOrScore(settings, hosts, farmsDefinition, "score")
                 } else {
                     hostsOrderBySetting(settings, hosts, farmsDefinition, value)
                 }
@@ -729,7 +884,7 @@ function hostsOrderBySetting(settings, hosts, farmsDefinition, orderBy) {
 
 
 // Groups hosts by version
-function hostsOrderByVersion(settings, hosts, farmsDefinition) {
+function hostsOrderByVersionOrScore(settings, hosts, farmsDefinition, method) {
     
     // Determining the show mode
     var showMode = $('#showDropdown').find(":selected").val();
@@ -743,44 +898,72 @@ function hostsOrderByVersion(settings, hosts, farmsDefinition) {
         hosts[i].rank = hosts.length - i
     }
 
-    // Grouping by version
-    var versions = []
-    for (var i = 0; i < hosts.length; i++) {
-        var versionMatch = false
-        for (var j = 0; j < versions.length; j++) {
-            if (hosts[i].version == versions[j].version) {
-                versionMatch = true
-                versions[j].hosts++
-                versions[j].hostsList.push(hosts[i])
+    var group = []
+    if (method == "version") {
+        // Grouping by version
+        for (var i = 0; i < hosts.length; i++) {
+            var versionMatch = false
+            for (var j = 0; j < group.length; j++) {
+                if (hosts[i].version == group[j].groupName) {
+                    versionMatch = true
+                    group[j].hosts++
+                    group[j].hostsList.push(hosts[i])
+                }
+            }
+            if (versionMatch == false) {
+                // Create new entry on array
+                group.push({
+                    groupName: hosts[i].version,
+                    hosts: 1,
+                    hostsList: [hosts[i]]
+                })
             }
         }
-        if (versionMatch == false) {
-            // Create new entry on array
-            versions.push({
-                version: hosts[i].version,
-                hosts: 1,
-                hostsList: [hosts[i]]
+        
+        // Sorting
+        function compare(a,b) {
+            if (a.groupName < b.groupName)
+                return 1;
+            if (a.groupName > b.groupName)
+                return -1;
+            return 0;
+        }
+        group.sort(compare);
+
+    } else if (method == "score") {
+        // Grouping by SiaStats score
+        // Creating empty array
+        for (var i = 0; i <= 10; i++) {
+            group.push({
+                groupName: i,
+                hosts: 0,
+                hostsList: []
             })
         }
+        for (var i = 0; i < hosts.length; i++) {
+            var s = hosts[i].siastatsScore
+            if (s == "0" || s == "1" || s == "2" || s == "3" || s == "4" || s == "5" || s == "6" || s == "7" 
+                || s == "8" || s == "9" || s == "10") {
+                group[parseInt(s)].hostsList.push(hosts[i])
+                group[parseInt(s)].hosts++
+            } else {
+                hosts[i].siastatsScore = 0
+                group[0].hostsList.push(hosts[i])
+                group[0].hosts++
+            }    
+        }
+        // Reverse order of the array
+        group.reverse()
     }
-    
-    // Sorting
-    function compare(a,b) {
-        if (a.version < b.version)
-            return 1;
-        if (a.version > b.version)
-            return -1;
-        return 0;
-    }
-    versions.sort(compare);
+
 
     // Displaying
     var content = ""
-    for (var i = 0; i < versions.length; i++) {
+    for (var i = 0; i < group.length; i++) {
         // Checking if there is at least one selected host on this version
         var versionWithSelectedHosts = false
-        for (var j = 0; j < versions[i].hostsList.length; j++) {
-            if (versions[i].hostsList[j].onList == true) {
+        for (var j = 0; j < group[i].hostsList.length; j++) {
+            if (group[i].hostsList[j].onList == true) {
                 versionWithSelectedHosts = true
             }
         }
@@ -792,58 +975,82 @@ function hostsOrderByVersion(settings, hosts, farmsDefinition) {
                     + '<thead>'
                         + '<tr>'
                             + '<th style="width: 10px">'
-                                + '<input type="checkbox" id="checkVersion' + versions[i].version + '" onchange="clickVersion(this)">'
+            if (method == "version") {
+                content = content + '<input type="checkbox" id="checkVersion' + group[i].groupName + '" onchange="clickVersionOrScore(this, 0)">'
                             + '</th>'
-                            + '<th colspan="7">'
-                                + versions[i].version + ' - ' + versions[i].hosts + " hosts"
+                            + '<th colspan="8">'
+                                + group[i].groupName + ' - ' + group[i].hosts + " hosts"
                             + '</th>'
                         + '</tr>'
+            } else if (method == "score") {
+                content = content + '<input type="checkbox" id="checkVersion' + group[i].groupName + '" onchange="clickVersionOrScore(this, 1)">'
+                            + '</th>'
+                            + '<th colspan="8"> Score: '
+                                + group[i].groupName + ' - ' + group[i].hosts + " hosts"
+                            + '</th>'
+                        + '</tr>'
+            }
         }
 
         // Iterating hosts
-        for (var j = 0; j < versions[i].hostsList.length; j++) {
-            if (showMode == "all" || (showMode == "onlySelected" && versions[i].hostsList[j].onList == true)) { // In "onlySelected" mode, only show if selected
+        for (var j = 0; j < group[i].hostsList.length; j++) {
+            if (showMode == "all" || (showMode == "onlySelected" && group[i].hostsList[j].onList == true)) { // In "onlySelected" mode, only show if selected
             
                 // Uptime calculation
-                var uptime = (versions[i].hostsList[j].recentsuccessfulinteractions/(versions[i].hostsList[j].recentsuccessfulinteractions + versions[i].hostsList[j].recentfailedinteractions)*100).toFixed(1)
+                var uptime = (group[i].hostsList[j].recentsuccessfulinteractions/(group[i].hostsList[j].recentsuccessfulinteractions + group[i].hostsList[j].recentfailedinteractions)*100).toFixed(1)
                 if (uptime == Infinity) {uptime = 0}
 
                 content = content + '<tr>'
                         + '<td style="font-size: 14px; height: 25px"></td>'
                         + '<td style="font-size: 14px; height: 25px">'
-                            + '<input type="checkbox" id="checkHost' + versions[i].hostsList[j].hostIdNumber + '"'
+                            + '<input type="checkbox" id="checkHost' + group[i].hostsList[j].hostIdNumber + '"'
                 // Checking box
-                if (versions[i].hostsList[j].onList == true) {
+                if (group[i].hostsList[j].onList == true) {
                     content = content + " checked"
+                }
+
+                // Score check
+                if (group[i].hostsList[j].siastatsScore == null) {
+                    group[i].hostsList[j].siastatsScore = "-"
+                }
+                // Score circle color
+                if (group[i].hostsList[j].siastatsScore == "-" || group[i].hostsList[j].siastatsScore == "0") {
+                    var scoreCircleColor = "#cc4444"
+                } else {
+                    var scoreCircleColor = "#000"
                 }
                             
                 content = content + ' onchange="clickHost(this)">'
                         + '</td>'
                         + '<td style="font-size: 14px; height: 25px">'
-                            + '<div class="tooltip">' + versions[i].hostsList[j].netaddress
+                            + '<div class="tooltip">' + group[i].hostsList[j].netaddress
                                 + '<span class="tooltiptext">'
-                                    + 'Country: ' + versions[i].hostsList[j].countryName + '<br>'
-                                    + 'Accepts contracts: ' + versions[i].hostsList[j].acceptingcontracts + '<br>'
+                                    + 'Country: ' + group[i].hostsList[j].countryName + '<br>'
+                                    + 'Accepts contracts: ' + group[i].hostsList[j].acceptingcontracts + '<br>'
                                     + 'Recent uptime: ' + uptime + '%<br>'
-                                    + 'Version: ' + versions[i].hostsList[j].version + '<br>'
-                                    + 'Total storage: ' + (versions[i].hostsList[j].totalstorage/1000000000000).toFixed(2) + ' TB<br>'
-                                    + 'Remaining storage: ' + (versions[i].hostsList[j].remainingstorage/1000000000000).toFixed(2) + ' TB'
+                                    + 'Version: ' + group[i].hostsList[j].version + '<br>'
+                                    + 'Total storage: ' + (group[i].hostsList[j].totalstorage/1000000000000).toFixed(2) + ' TB<br>'
+                                    + 'Remaining storage: ' + (group[i].hostsList[j].remainingstorage/1000000000000).toFixed(2) + ' TB'
                                 + '</span>'							
                             + '</div>'
                 // Showing alert
-                if (versions[i].hostsList[j].alert == true) {
+                if (group[i].hostsList[j].alert == true) {
                     content = content + '<div class="tooltip"><i class="fas fa-exclamation-triangle" style="color: #cc4444"></i>'
                                 + '<span class="tooltiptext">'
-                                    + 'SiaStats alert: ' + versions[i].hostsList[j].message
+                                    + 'SiaStats alert: ' + group[i].hostsList[j].message
                                 + '</span>'
                             + '</div>'
                 }
                 content = content + '</td>'
-                        + '<td style="font-size: 14px; height: 25px"><span>' + parseInt(versions[i].hostsList[j].storageprice * 400 / 92592592592)+ ' SC/TB/mo</span></td>'
-                        + '<td style="font-size: 14px; height: 25px"><span>Up:' + parseInt(versions[i].hostsList[j].uploadbandwidthprice/1000000000000) + ' SC/TB</span></td>'
-                        + '<td style="font-size: 14px; height: 25px"><span>Down: ' + parseInt(versions[i].hostsList[j].downloadbandwidthprice/1000000000000) + ' SC/TB</span></td>'
-                        + '<td style="font-size: 14px; height: 25px"><span>Collateral: ' + (versions[i].hostsList[j].collateral / versions[i].hostsList[j].storageprice).toFixed(1) + 'x </span></td>'
-                        + '<td style="font-size: 14px; height: 25px"><span>Rank #' + versions[i].hostsList[j].rank + '</span></td>'
+                        + '<td style="font-size: 14px; height: 25px"><span>' + parseInt(group[i].hostsList[j].storageprice * 400 / 92592592592)+ ' SC/TB/mo</span></td>'
+                        + '<td style="font-size: 14px; height: 25px"><span>Up:' + parseInt(group[i].hostsList[j].uploadbandwidthprice/1000000000000) + ' SC/TB</span></td>'
+                        + '<td style="font-size: 14px; height: 25px"><span>Down: ' + parseInt(group[i].hostsList[j].downloadbandwidthprice/1000000000000) + ' SC/TB</span></td>'
+                        + '<td style="font-size: 14px; height: 25px"><span>Collateral: ' + (group[i].hostsList[j].collateral / group[i].hostsList[j].storageprice).toFixed(1) + 'x </span></td>'
+                        + '<td style="font-size: 14px; height: 25px"><span>Rank #' + group[i].hostsList[j].rank + '</span></td>'
+                        + '<td style="font-size: 14px; height: 25px; padding: 0px 5px"><div class="tooltip" style="border-bottom: 0px">'
+                        + '<span style="background-color: ' + scoreCircleColor + '; color: #fff; border-radius: 15px; padding: 0px 5px;">' + group[i].hostsList[j].siastatsScore 
+                            + '<span class="tooltiptext" style="width: 100px; margin-left: -75px">Performance benchmarked by the SiaStats Hosts Monitor</span>'
+                        + '</span></div></td>'
                     + '</tr>'
             }
             
@@ -980,8 +1187,9 @@ function clickCountry(checkboxElem) {
 }
 
 
-// Events on clicking the checkbox of a Sia version number
-function clickVersion(checkboxElem) {
+// Events on clicking the checkbox of a Sia version number or a Score (called in this function as a version too)
+function clickVersionOrScore(checkboxElem, method) {
+    // Method: 0 = version, 1 = score
     $.getJSON(path.join(__dirname, "../databases/hosts.json"), function (hosts) {
         $.getJSON(path.join(__dirname, "../databases/settings.json"), function (settings) {
             $.getJSON(path.join(__dirname, "../databases/farms_definition.json"), function (farmsDefinition) {
@@ -995,10 +1203,11 @@ function clickVersion(checkboxElem) {
                     hosts[i].rank = hosts.length - i
                 }
 
-                var versionID = checkboxElem.id.slice(12)
+                var groupID = checkboxElem.id.slice(12)
                 if (checkboxElem.checked) {
                     for (var i = 0; i < hosts.length; i++) {
-                        if (hosts[i].version == versionID) {
+                        if ((hosts[i].version == groupID & method == 0) || (hosts[i].siastatsScore == groupID && method == 1)) { 
+                            // Match of versions if method == 0 (version), match of scores of method == 1 (scores)
                             var checkHost = "checkHost" + hosts[i].hostIdNumber
                             if (settings.listMode != "whitelist" || hosts[i].alert != true) { // Avoids adding an unsafe host
                                 document.getElementById(checkHost).checked = true;
@@ -1008,7 +1217,7 @@ function clickVersion(checkboxElem) {
                     }
                 } else {
                     for (var i = 0; i < hosts.length; i++) {
-                        if (hosts[i].version == versionID) {
+                        if ((hosts[i].version == groupID & method == 0) || (hosts[i].siastatsScore == groupID && method == 1)) {
                             var checkHost = "checkHost" + hosts[i].hostIdNumber
                             if (settings.listMode != "blacklist" || hosts[i].alert != true) { // Avoids adding an unsafe host
                                 document.getElementById(checkHost).checked = false;

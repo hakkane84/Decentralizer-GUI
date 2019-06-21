@@ -8,6 +8,7 @@ var sia = require('sia.js');
 var Path = require('path')
 var fs = require('fs');
 var axios = require('axios')
+var https = require('https');
 var path = require('path')
 var os = require('os')
 
@@ -60,11 +61,16 @@ function closeOverlay() {
 }
 
 // Error overlay: show an icon and an OK button
-function errorOverlay() {
+function errorOverlay(error) {
     document.getElementById("overlayIcon").innerHTML = '<i class="fas fa-times-circle"></i>'
-    var button = '<button type="button" class="button-scan" style="width: 150px; height: 35px; vertical-align: middle; cursor: pointer; margin: 25px 0px 0px 0px" onclick="closeOverlay()">'
+    var button = '<button type="button" class="button-scan" id="detailButton" style="width: 150px; height: 35px; vertical-align: middle; cursor: pointer; margin: 25px 10px 0px 0px" onclick="alert(error)">'
+        + 'Details</button>'
+        + '<button type="button" class="button-scan" style="width: 150px; height: 35px; vertical-align: middle; cursor: pointer; margin: 25px 0px 0px 10px" onclick="closeOverlay()">'
         + 'OK</button>'
     document.getElementById("overlayButtons").innerHTML = button
+
+    // Prompts an alert window with the error details
+    document.getElementById("detailButton").onclick = function() { alert(error) }
 }
 
 // Succeded overlay: show an icon and an OK button
@@ -80,7 +86,13 @@ function succededOverlay() {
 
 function siastatsGeolocFile() {
     // SiaStats JSON geolocation. If the file can't be downloaded, the local copy is used instead
-    axios.get('https://siastats.info/dbs/decentralizer_hosts_geoloc.json').then(response => {
+
+    // Removing SSL authorization for this specific API call
+    var agent = new https.Agent({  
+        rejectUnauthorized: false
+    });
+
+    axios.get('https://siastats.info:3510/hosts-api/decentralizer/sia', { httpsAgent: agent }).then(response => {
         var siastatsGeoloc = response.data
         document.getElementById("overlayMessage").innerHTML = "Downloaded " + siastatsGeoloc.length + " hosts geolocations from SiaStats.info"
         // Saving the file
@@ -96,7 +108,7 @@ function siastatsGeolocFile() {
             siastatsFarmsFile(siastatsGeoloc)
         } else {
             document.getElementById("overlayMessage").innerHTML = "ERROR - The software can't find locally or download necessary databases. Try re-installing Decentralizer or connecting to the Internet"
-            errorOverlay()
+            errorOverlay(error)
         }});
     })
 }
@@ -121,7 +133,7 @@ function siastatsFarmsFile(siastatsGeoloc) {
             siaHosts(siastatsGeoloc, siastatsFarms)
         } else {
             document.getElementById("overlayMessage").innerHTML = "ERROR - The software can't find locally, or download, necessary databases. Try re-installing Decentralizer or connecting to the Internet"
-            errorOverlay()
+            errorOverlay(err)
         }});
     });
 }
@@ -137,9 +149,11 @@ function siaHosts(siastatsGeoloc, siastatsFarms) {
             // Filtering only the active and accepting contracts. If I was using the /hostdb/active, it would show less hosts after applying a filter
             var active = []
             for (var i = 0; i < allHosts.length; i++) {
-                if (allHosts[i].scanhistory[allHosts[i].scanhistory.length-1].success == true
-                    && allHosts[i].acceptingcontracts == true) {
-                    active.push(allHosts[i])
+                if (allHosts[i].scanhistory != null) { // It has already one scan
+                    if (allHosts[i].scanhistory[allHosts[i].scanhistory.length-1].success == true
+                        && allHosts[i].acceptingcontracts == true) {
+                        active.push(allHosts[i])
+                    }
                 }
             }
             var hostdb = active
@@ -150,18 +164,20 @@ function siaHosts(siastatsGeoloc, siastatsFarms) {
         })
         .catch((err) => {
             document.getElementById("overlayMessage").innerHTML = "Error retrieving data from Sia. Is Sia working, synced and connected to internet? Try again after restarting Sia."
-            errorOverlay()
+            errorOverlay(err)
         })
     })
     .catch((err) => {
         document.getElementById("overlayMessage").innerHTML = "Error connecting to Sia. Start the Sia app (either daemon or UI) and try again"
-        errorOverlay()
+        errorOverlay(err)
     })
 }
 
 
 function hostsScore(siastatsGeoloc, siastatsFarms, active, hostNum) {
     // Iterates on each host to collect from Sia the score of the host
+    document.getElementById("overlayMessage").innerHTML = "Retrieving " + active.length + " hosts data from Sia"
+        + "<br>(" + hostNum + "/" + active.length + ")"
     if (hostNum < active.length) {
         sia.connect('localhost:9980')
         .then((siad) => {siad.call('/hostdb/hosts/' + active[hostNum].publickeystring)
@@ -173,12 +189,12 @@ function hostsScore(siastatsGeoloc, siastatsFarms, active, hostNum) {
             })
             .catch((err) => {
                 document.getElementById("overlayMessage").innerHTML = "A - Error retrieving data from Sia. Is Sia working, synced and connected to internet? Try again after restarting Sia."
-                errorOverlay()
+                errorOverlay(err)
             })
         })
         .catch((err) => {
             document.getElementById("overlayMessage").innerHTML = "Error connecting to Sia. Start the Sia app (either daemon or UI) and try again"
-            errorOverlay()
+            errorOverlay(err)
         })
 
     } else {
@@ -205,18 +221,24 @@ function hostsProcessing(siastatsGeoloc, siastatsFarms, hostdb) {
     for (var i = 0; i < hostdb.length; i++) { // For each host
         var matchBool = false
         for (var j = 0; j < siastatsGeoloc.length; j++) { // For each geolocation in list
-            if (hostdb[i].publickey.key == siastatsGeoloc[j].pubkey) {
+            if (hostdb[i].publickeystring == siastatsGeoloc[j].pubkey) {
                 // Match, update hostdb entry
                 matchBool = true
                 hostdb[i].lon = siastatsGeoloc[j].lon
                 hostdb[i].lat = siastatsGeoloc[j].lat
                 hostdb[i].countryName = siastatsGeoloc[j].countryName
                 hostdb[i].countryCode = siastatsGeoloc[j].countryCode
+                hostdb[i].siastatsScore = siastatsGeoloc[j].siastatsScore
+                
+                // We update the geoloc file with the pubkey in the non-hex format, as it will be lated needed for the contracts identification
+                siastatsGeoloc[j].pubkey2 = hostdb[i].publickey.key
             }
         }
         if (matchBool == false) {
             // If no match, add to the list
             hostsToGeoloc.push(i)
+
+            hostdb[i].siastatsScore = 0 // Adding a 0 in the score
         }
     }
 
@@ -345,12 +367,12 @@ function siaContracts(siastatsFarms, siastatsGeoloc) {
         })
         .catch((err) => {
             document.getElementById("overlayMessage").innerHTML = "Error retrieving data from Sia. Is Sia working, synced and connected to internet? Try again after restarting Sia."
-            errorOverlay()
+            errorOverlay(err)
         })
     })
     .catch((err) => {
         document.getElementById("overlayMessage").innerHTML = "Error connecting to Sia. Start the Sia app (either daemon or UI) and try again"
-        errorOverlay()
+        errorOverlay(err)
     })
 }
 
@@ -362,7 +384,7 @@ function contractsIpAssign(siastatsFarms, contracts, siastatsGeoloc) {
     for (var i = 0; i < contracts.length; i++) { // For each contract
         var matchBool = false
         for (var j = 0; j < siastatsGeoloc.length; j++) { // For each geolocation in list
-            if (contracts[i].hostpublickey.key == siastatsGeoloc[j].pubkey) {
+            if (contracts[i].hostpublickey.key == siastatsGeoloc[j].pubkey2) {
                 // Match, update hostdb entry
                 matchBool = true
                 contracts[i].lon = siastatsGeoloc[j].lon
@@ -370,11 +392,14 @@ function contractsIpAssign(siastatsFarms, contracts, siastatsGeoloc) {
                 contracts[i].as = siastatsGeoloc[j].as
                 contracts[i].countryName = siastatsGeoloc[j].countryName
                 contracts[i].countryCode = siastatsGeoloc[j].countryCode
+                contracts[i].siastatsScore = siastatsGeoloc[j].siastatsScore
             }
         }
         if (matchBool == false) {
             // If no match, add to the list
             contractsToGeoloc.push(i)
+
+            contracts[i].siastatsScore = 0 // 0 score, as it is not on the database
         }
     }
 
@@ -485,7 +510,8 @@ function processHosts(siastatsFarms, contracts) {
                     contract: hostsGroups[j][k].id,
                     cost: parseFloat((hostsGroups[j][k].totalcost/1000000000000000000000000).toFixed(2)),
                     data: parseFloat((hostsGroups[j][k].size/1000000000).toFixed(2)), // In GB
-                    pubkey: hostsGroups[j][k].hostpublickey.key
+                    pubkey: hostsGroups[j][k].hostpublickey.key,
+                    siastatsScore: hostsGroups[j][k].siastatsScore
                 }
                 farmEntry.hosts.push(hostEntry)
             }
@@ -520,7 +546,8 @@ function processHosts(siastatsFarms, contracts) {
                 contract: hostsGroups[j][0].id,
                 cost: parseFloat((hostsGroups[j][0].totalcost/1000000000000000000000000).toFixed(2)),
                 data: parseFloat((hostsGroups[j][0].size/1000000000).toFixed(2)), // In GB
-                pubkey: hostsGroups[j][0].hostpublickey.key
+                pubkey: hostsGroups[j][0].hostpublickey.key,
+                siastatsScore: hostsGroups[j][0].siastatsScore
             }
             // Pushing it to the element 0 of farmList, the "Other hosts"
             farmList[0].hosts.push(hostEntry)
@@ -580,7 +607,8 @@ function siastatsProcess(farmList, contracts, siastatsFarms) {
                                         contract: extraGroups[m].hosts[n].id,
                                         cost: parseFloat((extraGroups[m].hosts[n].totalcost/1000000000000000000000000).toFixed(2)),
                                         data: parseFloat((extraGroups[m].hosts[n].size/1000000000).toFixed(2)), // In GB
-                                        siastatsFlag: true // Add the flag to the latest host of that farm (the one we just pushed)
+                                        siastatsFlag: true, // Add the flag to the latest host of that farm (the one we just pushed)
+                                        siastatsScore: extraGroups[m].hosts[n].siastatsScore
                                     })
                                 }
 
@@ -617,6 +645,7 @@ function siastatsProcess(farmList, contracts, siastatsFarms) {
                     contract: extraGroups[i].hosts[j].id,
                     cost: parseFloat((extraGroups[i].hosts[j].totalcost/1000000000000000000000000).toFixed(2)),
                     data: parseFloat((extraGroups[i].hosts[j].size/1000000000).toFixed(2)), // In GB
+                    siastatsScore: extraGroups[m].hosts[n].siastatsScore
                 })
 
                 // Adding an alert if the groups carries it
@@ -651,20 +680,75 @@ function openSettingsFile(foundContractsBool) {
     fs.readFile(path.join(__dirname, "../databases/settings.json"), 'utf8', function (err, data) { if (!err) { 
         var settings = JSON.parse(data)
         settings.lastsync = timestamp
-        userGeolocation(settings, foundContractsBool)
+        getConsensusHeight(settings, foundContractsBool)
     } else {
         // Initialize a settings file here
         var settings = {
             userLon: null,
             userLat: null,
             lastsync: timestamp,
-            listMode: "disable"
+            listMode: "disable",
+            consensusHeight: null,
+            renewWindow: null
         }
-        userGeolocation(settings, foundContractsBool)
+        getConsensusHeight(settings, foundContractsBool)
     }});
 }
 
+function getConsensusHeight(settings, foundContractsBool) {
+    // Gets the current consensus height
+    document.getElementById("overlayMessage").innerHTML = "Getting current block height"
+    sia.connect('localhost:9980')
+    .then((siad) => {siad.call('/consensus')
+        .then((api) => {
+            if (api.synced == true) {
+                // Update only if the client is fully synced, otherwise keep it null, to avoid issues on contracts timeline representation
+                settings.consensusHeight = api.height
+            } else {
+                settings.consensusHeight = null
+            }
+            getAllowanceInfo(settings, foundContractsBool)
+        })
+        .catch((err) => {
+            document.getElementById("overlayMessage").innerHTML = "Error retrieving data from Sia. Is Sia working, synced and connected to internet? Try again after restarting Sia."
+            errorOverlay(err)
+        })
+    })
+    .catch((err) => {
+        document.getElementById("overlayMessage").innerHTML = "Error connecting to Sia. Start the Sia app (either daemon or UI) and try again"
+        errorOverlay(err)
+    })
+}
+
+
+function getAllowanceInfo(settings, foundContractsBool) {
+    // Gets the renewal window of the contracts from Sia
+    document.getElementById("overlayMessage").innerHTML = "Getting some info from your allowance"
+    sia.connect('localhost:9980')
+    .then((siad) => {siad.call('/renter')
+        .then((api) => {
+            try {
+                settings.renewWindow = api.settings.allowance.renewwindow
+                userGeolocation(settings, foundContractsBool)
+            } catch (e) {
+                document.getElementById("overlayMessage").innerHTML = "No allowance information was found. Have you formed an allowance yet?"
+                errorOverlay(e)
+            }
+        })
+        .catch((err) => {
+            document.getElementById("overlayMessage").innerHTML = "Error retrieving data from Sia. Is Sia working, synced and connected to internet? Try again after restarting Sia."
+            errorOverlay(err)
+        })
+    })
+    .catch((err) => {
+        document.getElementById("overlayMessage").innerHTML = "Error connecting to Sia. Start the Sia app (either daemon or UI) and try again"
+        errorOverlay(err)
+    })
+}
+
+
 function userGeolocation(settings, foundContractsBool) {
+    document.getElementById("overlayMessage").innerHTML = "Finishing details"
     var ipquery = "http://ip-api.com/json/"
 
     axios.get(ipquery).then(response => {
@@ -739,16 +823,16 @@ function cancelFarms() {
             } else {
                 // If no contract was selected, show an error
                 document.getElementById("overlayMessage").innerHTML = "ERROR - Select at least one contract"
-                errorOverlay()
+                errorOverlay("No contract selected")
             }
 
         } else {
             document.getElementById("overlayMessage").innerHTML = "ERROR - The software can't find the necessary databases. Use the scan button"
-            errorOverlay()
+            errorOverlay(err)
         }});
     } else {
         document.getElementById("overlayMessage").innerHTML = "ERROR - The software can't find the necessary databases. Use the scan button"
-        errorOverlay()
+        errorOverlay(err)
     }});
 }
 
@@ -791,11 +875,11 @@ function preCancelFarm() {
 
         } else {
             document.getElementById("overlayMessage").innerHTML = "ERROR - The software can't find the necessary databases. Use the scan button"
-            errorOverlay()
+            errorOverlay(err)
         }});
     } else {
         document.getElementById("overlayMessage").innerHTML = "ERROR - The software can't find the necessary databases. Use the scan button"
-        errorOverlay()
+        errorOverlay(err)
     }});
 }
 
@@ -830,12 +914,12 @@ function cancelContracts() {
         } else {
             // If no contract was selected, show an error
             document.getElementById("overlayMessage").innerHTML = "ERROR - Select at least one contract"
-            errorOverlay()
+            errorOverlay("No contract selected")
         }
         
     } else {
         document.getElementById("overlayMessage").innerHTML = "ERROR - The software can't find the necessary databases. Use the scan button"
-        errorOverlay()
+        errorOverlay(err)
     }});
 
 }
@@ -871,7 +955,7 @@ function preCancel() {
         
     } else {
         document.getElementById("overlayMessage").innerHTML = "ERROR - The software can't find the necessary databases. Use the scan button"
-        errorOverlay()
+        errorOverlay(err)
     }});
     
 }
@@ -929,7 +1013,7 @@ function cancelContract(contractNum, contractsToRemove, attempt, contracts) {
             // Stop and report error if it could not be cancelled
             document.getElementById("overlayMessage").innerHTML = "ERROR cancelling:<br>" + contractsToRemove[contractNum].ip
                 + "<br>Is Sia working and synced? Also Sia could be busy: try again after some minutes"
-            errorOverlay()
+            errorOverlay("Is Sia working and synced? Also Sia could be busy: try again after some minutes")
             // Also, reload interface, as some contracts might have been eliminated successfully
             initialLoad()
         } else { // Retry up to 3 times, after a short delay
@@ -960,7 +1044,7 @@ function findAndRemoveContractFromFarm(contractId) {
 
     } else {
         document.getElementById("overlayMessage").innerHTML = "ERROR - The software can't find the necessary databases. Use the scan button"
-        errorOverlay()
+        errorOverlay(err)
     }});
 }
 
@@ -1082,19 +1166,19 @@ function preFilter() {
 
                 } else {
                     document.getElementById("overlayMessage").innerHTML = "ERROR - The software can't find the necessary databases. Use the scan button"
-                    errorOverlay()
+                    errorOverlay(err)
                 }});
             } else {
                 document.getElementById("overlayMessage").innerHTML = "ERROR - The software can't find the necessary databases. Use the scan button"
-                errorOverlay()
+                errorOverlay(err)
             }});
         } else {
             document.getElementById("overlayMessage").innerHTML = "ERROR - The software can't find the necessary databases. Use the scan button"
-            errorOverlay()
+            errorOverlay(err)
         }});
     } else {
         document.getElementById("overlayMessage").innerHTML = "ERROR - The software can't find the necessary databases. Use the scan button"
-        errorOverlay()
+        errorOverlay(err)
     }});
 
 }
@@ -1128,11 +1212,11 @@ function applyFilter() {
 
         } else {
             document.getElementById("overlayMessage").innerHTML = "ERROR - The software can't find the necessary databases. Use the scan button"
-            errorOverlay()
+            errorOverlay(err)
         }});
     } else {
         document.getElementById("overlayMessage").innerHTML = "ERROR - The software can't find the necessary databases. Use the scan button"
-        errorOverlay()
+        errorOverlay(err)
     }});
 }
 
@@ -1160,7 +1244,7 @@ function siaFilter(list, newMode) {
     })
     .catch((err) => {
         document.getElementById("overlayMessage").innerHTML = "ERROR - The filter could not be applied. Is the Sia software<br>running and updated to 1.4.0 or onwards?"
-        errorOverlay()
+        errorOverlay(err)
     })
 }
 

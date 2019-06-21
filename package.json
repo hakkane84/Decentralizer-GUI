@@ -14,18 +14,18 @@
     "scripts": {
         "start": "electron .",
         "package-mac": "electron-packager . --overwrite --platform=darwin --arch=x64 --icon=assets/icons/mac/icon.icns --prune=true --out=release-builds",
-        "package-win": "electron-packager . decentralizer --overwrite --platform=win32 --arch=ia32 --icon=assets/icons/win/icon256.ico --prune=true --out=release-builds --version-string.CompanyName=Keops --version-string.FileDescription=Decentralizer --version-string.ProductName='Decentralizer'",    
+        "package-win": "electron-packager . decentralizer --overwrite --platform=win32 --arch=ia32 --icon=assets/icons/win/icon256.ico --prune=true --out=release-builds --version-string.CompanyName=Keops --version-string.FileDescription=Decentralizer --version-string.ProductName='Decentralizer'",
         "package-linux": "electron-packager . decentralizer --overwrite --platform=linux --arch=x64 --icon=assets/icons/png/1024x1024.png --prune=true --out=release-builds"
     },
     "devDependencies": {
-        "electron": "^3.0.13",
-        "electron-packager": "^13.0.1"
+        "electron": "^3.1.10",
+        "electron-packager": "^13.1.1"
     },
     "dependencies": {
-        "axios": "^0.18.0",
+        "axios": "^0.18.1",
         "babel-runtime": "^6.26.0",
-        "highcharts": "^7.0.1",
-        "jquery": "^3.3.1",
+        "highcharts": "^7.1.1",
+        "jquery": "^3.4.1",
         "proj4": "^2.5.0",
         "sia.js": "^0.4.2"
     }
