@@ -72,6 +72,10 @@ If the filter leaves out hosts you already have contracts with, **these contract
 
 ## Changes log
 
+### v1.1.2
+
+* Fixed a a bug when scanning hosts and contracts but the user has not stablished an allowance yet
+
 ### v1.1
 
 * Added SiaStats performance score to the tables of hosts and contracts. Hosts can be filtered according to this score

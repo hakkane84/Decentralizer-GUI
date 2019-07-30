@@ -163,7 +163,7 @@ function siaHosts(siastatsGeoloc, siastatsFarms) {
             hostsScore(siastatsGeoloc, siastatsFarms, hostdb, hostNum)
         })
         .catch((err) => {
-            document.getElementById("overlayMessage").innerHTML = "Error retrieving data from Sia. Is Sia working, synced and connected to internet? Try again after restarting Sia."
+            document.getElementById("overlayMessage").innerHTML = "Error retrieving hosts data from Sia. Is Sia working, synced and connected to internet? Try again after restarting Sia."
             errorOverlay(err)
         })
     })
@@ -188,7 +188,7 @@ function hostsScore(siastatsGeoloc, siastatsFarms, active, hostNum) {
                 hostsScore(siastatsGeoloc, siastatsFarms, active, hostNum)
             })
             .catch((err) => {
-                document.getElementById("overlayMessage").innerHTML = "A - Error retrieving data from Sia. Is Sia working, synced and connected to internet? Try again after restarting Sia."
+                document.getElementById("overlayMessage").innerHTML = "Error retrieving individual hosts data from Sia. Is Sia working, synced and connected to internet? Try again after restarting Sia."
                 errorOverlay(err)
             })
         })
@@ -338,7 +338,7 @@ function siaContracts(siastatsFarms, siastatsGeoloc) {
             var contracts = contractsAPI.contracts
 
             if (contracts.length == 0) {
-                // Empry files
+                // Empty files
                 var contracts = []
                 try { fs.writeFileSync(path.join(__dirname, "../databases/contracts.json"), JSON.stringify(contracts), 'utf-8'); }
                 catch(e) { alert('Failed to save the file contracts.json\n' + e);}
@@ -366,8 +366,16 @@ function siaContracts(siastatsFarms, siastatsGeoloc) {
 
         })
         .catch((err) => {
-            document.getElementById("overlayMessage").innerHTML = "Error retrieving data from Sia. Is Sia working, synced and connected to internet? Try again after restarting Sia."
-            errorOverlay(err)
+            // In some circumstances, abscense of contracts can make this call to fail
+            // Empty files
+            var contracts = []
+            try { fs.writeFileSync(path.join(__dirname, "../databases/contracts.json"), JSON.stringify(contracts), 'utf-8'); }
+            catch(e) { alert('Failed to save the file contracts.json\n' + e);}
+
+            var farms = []
+            try { fs.writeFileSync(path.join(__dirname, "../databases/farms.json"), JSON.stringify(farms), 'utf-8'); }
+            catch(e) { alert('Failed to save the file farms.json\n' + e);}
+            openSettingsFile(false)
         })
     })
     .catch((err) => {
@@ -710,7 +718,7 @@ function getConsensusHeight(settings, foundContractsBool) {
             getAllowanceInfo(settings, foundContractsBool)
         })
         .catch((err) => {
-            document.getElementById("overlayMessage").innerHTML = "Error retrieving data from Sia. Is Sia working, synced and connected to internet? Try again after restarting Sia."
+            document.getElementById("overlayMessage").innerHTML = "Error retrieving consensus data from Sia. Is Sia working, synced and connected to internet? Try again after restarting Sia."
             errorOverlay(err)
         })
     })
@@ -736,7 +744,7 @@ function getAllowanceInfo(settings, foundContractsBool) {
             }
         })
         .catch((err) => {
-            document.getElementById("overlayMessage").innerHTML = "Error retrieving data from Sia. Is Sia working, synced and connected to internet? Try again after restarting Sia."
+            document.getElementById("overlayMessage").innerHTML = "Error retrieving renter data from Sia. Is Sia working, synced and connected to internet? Try again after restarting Sia."
             errorOverlay(err)
         })
     })
