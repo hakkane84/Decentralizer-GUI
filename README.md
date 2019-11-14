@@ -97,7 +97,11 @@ The easiest way to comply with this is simply using the cloning button of this r
 
 ## Compiling from source
 
-Install Node.js / NPM. Install `electron` in dev mode. The following scripts are available for easy compiling:
+Install Node.js / NPM. 
+
+Install `electron` in dev mode: `npm install electron --save-dev`. 
+
+The following scripts are available for easy compiling:
 
 * `npm run package-win`
 * `npm run package-mac`
