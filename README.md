@@ -72,9 +72,13 @@ If the filter leaves out hosts you already have contracts with, **these contract
 
 ## Changes log
 
+### v1.1.3
+
+* Fixed a bug on the main screen that prevented to show the contracts map, timeline and info for some users.
+
 ### v1.1.2
 
-* Fixed a a bug when scanning hosts and contracts but the user has not stablished an allowance yet
+* Fixed a bug when scanning hosts and contracts but the user has not stablished an allowance yet
 
 ### v1.1
 
