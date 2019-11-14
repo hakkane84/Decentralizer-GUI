@@ -60,7 +60,7 @@ function initialLoad() {
                             lat: settings.userLat
                         }]
                         for (var i = 0; i < contracts.length; i++) {
-                            if (contracts[i].lon != null && contracts[i].lat != null) { // Only if we have its geolocation
+                            if (contracts[i].lon != null && contracts[i].lat != null && contracts[i].lon != "" && contracts[i].lat != "") { // Only if we have its geolocation
                                 processed_json.push({
                                     id: contracts[i].netaddress,
                                     lon: contracts[i].lon,
@@ -72,214 +72,225 @@ function initialLoad() {
                         }
                         
                         // Initialize the chart
-                        var chart = Highmaps.mapChart('container-map', {
+                        try {
+                            var chart = Highmaps.mapChart('container-map', {
 
-                            title: {
-                                text: 'Contracted storage providers',
-                                style: {
-                                    color:"#555",
-                                    fontSize:'20px',
-                                    fontWeight: '900'
-                                }
-                            },
-
-                            chart: {
-                                backgroundColor: "#ccc",
-                            },
-
-                            credits: {
-                                enabled: false,
-                            },
-
-                            mapNavigation: {
-                                enabled: true,
-                                buttonOptions: {
-                                    verticalAlign: 'bottom'
-                                }
-                            },
-
-                            tooltip: {
-                                headerFormat: '',
-                                pointFormat: '<b>{point.id}</b><br>Data:{point.data} GB<br>Value:{point.value} SC',
-                                backgroundColor: '#445555',
-                                borderRadius: 10,
-                                style: {
-                                    color: '#ffffff',
-                                }
-                            },
-
-                            legend: {
-                                enabled: false
-                            },
-
-                            plotOptions: {
-                                series: {
-                                    marker: {
-                                        fillColor: '#FFFFFF',
-                                        lineWidth: 2,
-                                        lineColor: Highmaps.getOptions().colors[1]
-                                    }
-                                }
-                            },
-
-                            series: [{
-                                mapData: Highmaps.maps['custom/world-highres3'],
-                                name: 'Basemap',
-                                borderColor: '#a8a8a8',
-                                nullColor: '#fff',
-                                showInLegend: false
-                            }, {
-                                name: 'Separators',
-                                type: 'mapline',
-                                data: Highmaps.geojson(Highmaps.maps['custom/world-highres3'], 'mapline'),
-                                showInLegend: false,
-                                enableMouseTracking: false
-                            }, {
-                                type: 'mappoint',
-                                name: 'Hosts',
-                                color: "#1ed660",
-                                borderColor: "4a4a4a",
-                                data: processed_json
-                            }]
-                        });
-
-                        // Function to return an SVG path between two points, with an arc
-                        function pointsToPath(from, to, invertArc) {
-                            var arcPointX = (from.x + to.x) / (invertArc ? 2.4 : 1.6),
-                                arcPointY = (from.y + to.y) / (invertArc ? 2.4 : 1.6);
-                            return 'M' + from.x + ',' + from.y + 'Q' + arcPointX + ' ' + arcPointY +
-                                    ',' + to.x + ' ' + to.y;
-                        }
-                        var renterPoint = chart.get('Renter');
-                        var paths = []
-                        for (var i = 1; i < processed_json.length; i++) {
-                            paths.push({
-                                id: processed_json[i].id + " -> Renter",
-                                path: pointsToPath(renterPoint, chart.get(processed_json[i].id))
-                            })
-                        }
-
-                        // Add a series of lines for the renter
-                        chart.addSeries({
-                            name: 'Host-Renter connections',
-                            type: 'mapline',
-                            lineWidth: 2,
-                            color: '#1bc859',
-                            data: paths
-                        });
-                        
-
-                        if (settings.consensusHeight != null && settings.renewWindow != null) { // Avoids issues first time the user updates to 1.1
-                            // Processing contracts for the timeline
-                            var timeline = []
-                            var labels = []
-                            for (var i = 0; i < contracts.length; i++) {
-                                var startDate = settings.lastsync - ((settings.consensusHeight - contracts[i].startheight) * 600000)
-                                var renewDate = startDate + ((contracts[i].endheight - contracts[i].startheight - settings.renewWindow) * 600000)
-                                var endDate = settings.lastsync + ((contracts[i].endheight - settings.consensusHeight) * 600000)
-                                var spentPercentage = parseInt(((contracts[i].totalcost - contracts[i].renterfunds) / contracts[i].totalcost) * 100)
-                                if (contracts[i].goodforrenew == true) {
-                                    var colorRenew = "#ddd"
-                                    var textRenew = "Grace period"
-                                } else {
-                                    var colorRenew = "#cc6666"
-                                    var textRenew = "Grace peroid"
-                                }
-                                timeline.push({ // Pre-renew span
-                                    x: startDate,
-                                    x2: renewDate,
-                                    y: i,
-                                    partialFill: spentPercentage/100,
-                                    color: "#999",
-                                    spentPercentage: spentPercentage,
-                                    dataLabels: {
-                                        enabled: true,
-                                        format: '{point.spentPercentage}% spent',
-                                    },
-                                    tooltipText: "<b>Billing period</b>: " + simplifiedTimestamp(startDate) + " - " + simplifiedTimestamp(renewDate)
-                                        + "<br>" + contracts[i].netaddress
-                                        + "<br>Contract cost: " + legibleSc(contracts[i].totalcost) + "<br>Spent: " + legibleSc((contracts[i].totalcost - contracts[i].renterfunds))
-                                        + "<br>- Storage: " + legibleSc(contracts[i].StorageSpending) + "<br>- Upload: " + legibleSc(contracts[i].uploadspending) 
-                                        + "<br>- Download: " + legibleSc(contracts[i].downloadspending) + "<br>- Fees: " + legibleSc(contracts[i].fees) 
-                                        + "<br>Remaining funds: " + legibleSc(contracts[i].renterfunds)
-                                        + "<br><br>Stored data: " + (contracts[i].size/1000000000).toFixed(2) + " GB"
-                                })
-                                timeline.push({ // Renew window/grace period
-                                    x: renewDate,
-                                    x2: endDate,
-                                    y: i,
-                                    color: colorRenew,
-                                    dataLabels: {
-                                        enabled: true,
-                                        format: textRenew,
-                                        style: {fontWeight: "normal"}
-                                    },
-                                    tooltipText: "<b>Grace period</b>: " + simplifiedTimestamp(renewDate) + " - " + simplifiedTimestamp(endDate)
-                                        + "<br> <i>(formerly: renew window)</i>"
-                                })
-                                // Adding details to the grace period tooltip
-                                if (contracts[i].goodforrenew == true) {
-                                    timeline[timeline.length-1].tooltipText = timeline[timeline.length-1].tooltipText
-                                        + "<br>This contract <b>will</b> be extended <br>if your Sia client is online"
-                                } else {
-                                    timeline[timeline.length-1].tooltipText = timeline[timeline.length-1].tooltipText
-                                        + "<br>This contract <b>will not</b> be extended, <br>and will be replaced by another host"
-                                }
-                                labels.push(contracts[i].netaddress)
-                            }
-
-                            // Adjusting the heigth of the timeline container to the number of contracts
-                            document.getElementById('container-timeline').style.height = ((17 * contracts.length) + 100) + "px"
-
-                            // Initialize the timeline of contracts chart
-                            var timestamp = Date.now()
-                            var chart = Highcharts.chart('container-timeline', {
-                                chart: {
-                                    type: 'xrange'
-                                },
                                 title: {
-                                    text: 'Contracts timeline',
+                                    text: 'Contracted storage providers',
                                     style: {
                                         color:"#555",
-                                        fontSize:'18px',
+                                        fontSize:'20px',
                                         fontWeight: '900'
                                     }
                                 },
-                                xAxis: {
-                                    type: 'datetime',
-                                    plotLines: [{
-                                        color: '#1bc859',
-                                        width: 3,
-                                        value: timestamp,
-                                        zIndex: 5,
-                                    }],
-                                    gridLineWidth: 2,
-                                    gridLineDashStyle: 'dash',
+    
+                                chart: {
+                                    backgroundColor: "#ccc",
                                 },
-                                yAxis: {
-                                    title: {
-                                        text: ''
-                                    },
-                                    categories: labels,
-                                    reversed: true,
+    
+                                credits: {
+                                    enabled: false,
                                 },
-                                legend: {enabled: false},
-                                credits: {enabled:false},
+    
+                                mapNavigation: {
+                                    enabled: true,
+                                    buttonOptions: {
+                                        verticalAlign: 'bottom'
+                                    }
+                                },
+    
                                 tooltip: {
                                     headerFormat: '',
-                                    pointFormat: '{point.tooltipText}',
+                                    pointFormat: '<b>{point.id}</b><br>Data:{point.data} GB<br>Value:{point.value} SC',
                                     backgroundColor: '#445555',
                                     borderRadius: 10,
                                     style: {
                                         color: '#ffffff',
                                     }
                                 },
+    
+                                legend: {
+                                    enabled: false
+                                },
+    
+                                plotOptions: {
+                                    series: {
+                                        marker: {
+                                            fillColor: '#FFFFFF',
+                                            lineWidth: 2,
+                                            lineColor: Highmaps.getOptions().colors[1]
+                                        }
+                                    }
+                                },
+    
                                 series: [{
-                                    borderColor: 'gray',
-                                    pointWidth: 14,
-                                    data: timeline,
+                                    mapData: Highmaps.maps['custom/world-highres3'],
+                                    name: 'Basemap',
+                                    borderColor: '#a8a8a8',
+                                    nullColor: '#fff',
+                                    showInLegend: false
+                                }, {
+                                    name: 'Separators',
+                                    type: 'mapline',
+                                    data: Highmaps.geojson(Highmaps.maps['custom/world-highres3'], 'mapline'),
+                                    showInLegend: false,
+                                    enableMouseTracking: false
+                                }, {
+                                    type: 'mappoint',
+                                    name: 'Hosts',
+                                    color: "#1ed660",
+                                    borderColor: "4a4a4a",
+                                    data: processed_json
                                 }]
-                            })
+                            });
+    
+                            // Function to return an SVG path between two points, with an arc
+                            function pointsToPath(from, to, invertArc) {
+                                var arcPointX = (from.x + to.x) / (invertArc ? 2.4 : 1.6),
+                                    arcPointY = (from.y + to.y) / (invertArc ? 2.4 : 1.6);
+                                return 'M' + from.x + ',' + from.y + 'Q' + arcPointX + ' ' + arcPointY +
+                                        ',' + to.x + ' ' + to.y;
+                            }
+                            var renterPoint = chart.get('Renter');
+                            var paths = []
+                            for (var i = 1; i < processed_json.length; i++) {
+                                paths.push({
+                                    id: processed_json[i].id + " -> Renter",
+                                    path: pointsToPath(renterPoint, chart.get(processed_json[i].id))
+                                })
+                            }
+    
+                            // Add a series of lines for the renter
+                            chart.addSeries({
+                                name: 'Host-Renter connections',
+                                type: 'mapline',
+                                lineWidth: 2,
+                                color: '#1bc859',
+                                data: paths
+                            });
+                        } catch (e) {
+                            // Rendering error
+                            document.getElementById("container-map").innerHTML = "Error rendering the map. <br>Details: <br><span style='font-size: 80%'>" + e + '</span>'
+                        }
+                        
+                        
+
+                        if (settings.consensusHeight != null && settings.renewWindow != null) { // Avoids issues first time the user updates to 1.1
+                            // Processing contracts for the timeline
+                            try {
+                                var timeline = []
+                                var labels = []
+                                for (var i = 0; i < contracts.length; i++) {
+                                    var startDate = settings.lastsync - ((settings.consensusHeight - contracts[i].startheight) * 600000)
+                                    var renewDate = startDate + ((contracts[i].endheight - contracts[i].startheight - settings.renewWindow) * 600000)
+                                    var endDate = settings.lastsync + ((contracts[i].endheight - settings.consensusHeight) * 600000)
+                                    var spentPercentage = parseInt(((contracts[i].totalcost - contracts[i].renterfunds) / contracts[i].totalcost) * 100)
+                                    if (contracts[i].goodforrenew == true) {
+                                        var colorRenew = "#ddd"
+                                        var textRenew = "Grace period"
+                                    } else {
+                                        var colorRenew = "#cc6666"
+                                        var textRenew = "Grace peroid"
+                                    }
+                                    timeline.push({ // Pre-renew span
+                                        x: startDate,
+                                        x2: renewDate,
+                                        y: i,
+                                        partialFill: spentPercentage/100,
+                                        color: "#999",
+                                        spentPercentage: spentPercentage,
+                                        dataLabels: {
+                                            enabled: true,
+                                            format: '{point.spentPercentage}% spent',
+                                        },
+                                        tooltipText: "<b>Billing period</b>: " + simplifiedTimestamp(startDate) + " - " + simplifiedTimestamp(renewDate)
+                                            + "<br>" + contracts[i].netaddress
+                                            + "<br>Contract cost: " + legibleSc(contracts[i].totalcost) + "<br>Spent: " + legibleSc((contracts[i].totalcost - contracts[i].renterfunds))
+                                            + "<br>- Storage: " + legibleSc(contracts[i].StorageSpending) + "<br>- Upload: " + legibleSc(contracts[i].uploadspending) 
+                                            + "<br>- Download: " + legibleSc(contracts[i].downloadspending) + "<br>- Fees: " + legibleSc(contracts[i].fees) 
+                                            + "<br>Remaining funds: " + legibleSc(contracts[i].renterfunds)
+                                            + "<br><br>Stored data: " + (contracts[i].size/1000000000).toFixed(2) + " GB"
+                                    })
+                                    timeline.push({ // Renew window/grace period
+                                        x: renewDate,
+                                        x2: endDate,
+                                        y: i,
+                                        color: colorRenew,
+                                        dataLabels: {
+                                            enabled: true,
+                                            format: textRenew,
+                                            style: {fontWeight: "normal"}
+                                        },
+                                        tooltipText: "<b>Grace period</b>: " + simplifiedTimestamp(renewDate) + " - " + simplifiedTimestamp(endDate)
+                                            + "<br> <i>(formerly: renew window)</i>"
+                                    })
+                                    // Adding details to the grace period tooltip
+                                    if (contracts[i].goodforrenew == true) {
+                                        timeline[timeline.length-1].tooltipText = timeline[timeline.length-1].tooltipText
+                                            + "<br>This contract <b>will</b> be extended <br>if your Sia client is online"
+                                    } else {
+                                        timeline[timeline.length-1].tooltipText = timeline[timeline.length-1].tooltipText
+                                            + "<br>This contract <b>will not</b> be extended, <br>and will be replaced by another host"
+                                    }
+                                    labels.push(contracts[i].netaddress)
+                                }
+
+                                // Adjusting the heigth of the timeline container to the number of contracts
+                                document.getElementById('container-timeline').style.height = ((17 * contracts.length) + 100) + "px"
+
+                                // Initialize the timeline of contracts chart
+                                var timestamp = Date.now()
+                                var chart = Highcharts.chart('container-timeline', {
+                                    chart: {
+                                        type: 'xrange'
+                                    },
+                                    title: {
+                                        text: 'Contracts timeline',
+                                        style: {
+                                            color:"#555",
+                                            fontSize:'18px',
+                                            fontWeight: '900'
+                                        }
+                                    },
+                                    xAxis: {
+                                        type: 'datetime',
+                                        plotLines: [{
+                                            color: '#1bc859',
+                                            width: 3,
+                                            value: timestamp,
+                                            zIndex: 5,
+                                        }],
+                                        gridLineWidth: 2,
+                                        gridLineDashStyle: 'dash',
+                                    },
+                                    yAxis: {
+                                        title: {
+                                            text: ''
+                                        },
+                                        categories: labels,
+                                        reversed: true,
+                                    },
+                                    legend: {enabled: false},
+                                    credits: {enabled:false},
+                                    tooltip: {
+                                        headerFormat: '',
+                                        pointFormat: '{point.tooltipText}',
+                                        backgroundColor: '#445555',
+                                        borderRadius: 10,
+                                        style: {
+                                            color: '#ffffff',
+                                        }
+                                    },
+                                    series: [{
+                                        borderColor: 'gray',
+                                        pointWidth: 14,
+                                        data: timeline,
+                                    }]
+                                })
+                            } catch (e) {
+                                // Rendering error
+                                document.getElementById("container-timeline").innerHTML = "Error rendering the timeline. <br>Details: <br><span style='font-size: 80%'>" + e + '</span>'
+                            }
                         } else {
                             // Hide the contracts timeline
                             $("#container-timeline").hide();
