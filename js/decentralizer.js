@@ -35,7 +35,7 @@ function initialLoad() {
                     $.getJSON(path.join(__dirname, "../databases/farms_definition.json"), function (farmsDefinition) {
 
                         // Show an alert if farms are found
-                        for (var i = 0; i < farms.length; i++) {
+                        for (let i = 0; i < farms.length; i++) {
                             if (farms[i].alert == true) {
                                 document.getElementById("alertIcon").innerHTML = '<i class="fas fa-exclamation-triangle"></i>'
                             }
@@ -59,7 +59,7 @@ function initialLoad() {
                             lon: settings.userLon,
                             lat: settings.userLat
                         }]
-                        for (var i = 0; i < contracts.length; i++) {
+                        for (let i = 0; i < contracts.length; i++) {
                             if (contracts[i].lon != null && contracts[i].lat != null && contracts[i].lon != "" && contracts[i].lat != "") { // Only if we have its geolocation
                                 processed_json.push({
                                     id: contracts[i].netaddress,
@@ -153,7 +153,7 @@ function initialLoad() {
                             }
                             var renterPoint = chart.get('Renter');
                             var paths = []
-                            for (var i = 1; i < processed_json.length; i++) {
+                            for (let i = 1; i < processed_json.length; i++) {
                                 paths.push({
                                     id: processed_json[i].id + " -> Renter",
                                     path: pointsToPath(renterPoint, chart.get(processed_json[i].id))
@@ -180,18 +180,21 @@ function initialLoad() {
                             try {
                                 var timeline = []
                                 var labels = []
-                                for (var i = 0; i < contracts.length; i++) {
+                                for (let i = 0; i < contracts.length; i++) {
                                     var startDate = settings.lastsync - ((settings.consensusHeight - contracts[i].startheight) * 600000)
                                     var renewDate = startDate + ((contracts[i].endheight - contracts[i].startheight - settings.renewWindow) * 600000)
                                     var endDate = settings.lastsync + ((contracts[i].endheight - settings.consensusHeight) * 600000)
                                     var spentPercentage = parseInt(((contracts[i].totalcost - contracts[i].renterfunds) / contracts[i].totalcost) * 100)
+
+                                    var colorRenew
+                                    var textRenew = "Grace period"
+
                                     if (contracts[i].goodforrenew == true) {
-                                        var colorRenew = "#ddd"
-                                        var textRenew = "Grace period"
+                                        colorRenew = "#ddd"
                                     } else {
-                                        var colorRenew = "#cc6666"
-                                        var textRenew = "Grace peroid"
+                                        colorRenew = "#cc6666"
                                     }
+
                                     timeline.push({ // Pre-renew span
                                         x: startDate,
                                         x2: renewDate,
@@ -328,10 +331,10 @@ function initialLoad() {
 
                         // CONTRACTS TABLE
                         // Checking farms for alerts
-                        for (var i = 0; i < farms.length; i++) {
+                        for (let i = 0; i < farms.length; i++) {
                             if (farms[i].alert == true) {
-                                for (var j = 0; j < farms[i].hosts.length; j++) { // Each host on the alerted farm
-                                    for (var k = 0; k < contracts.length; k++) {
+                                for (let j = 0; j < farms[i].hosts.length; j++) { // Each host on the alerted farm
+                                    for (let k = 0; k < contracts.length; k++) {
                                         if (farms[i].hosts[j].contract == contracts[k].id) {
                                             contracts[k].alert = farms[i].alert
                                             contracts[k].message = farms[i].message
@@ -342,8 +345,8 @@ function initialLoad() {
                         }
 
                         // Checking if the host is online
-                        for (var i = 0; i < contracts.length; i++) {
-                            for (var j = 0; j < hosts.length; j++) {
+                        for (let i = 0; i < contracts.length; i++) {
+                            for (let j = 0; j < hosts.length; j++) {
                                 if (contracts[i].hostpublickey.key == hosts[j].publickey.key) {
                                     // If the contract is in the host list, it is online
                                     contracts[i].online = true
@@ -367,7 +370,7 @@ function initialLoad() {
                                     + '<th><span>Online</span></th>'
                                 + '</tr>'
 
-                        for (var i = 0; i < contracts.length; i++) {
+                        for (let i = 0; i < contracts.length; i++) {
                             // Adding xx for unknown locations
                             if (contracts[i].countryCode == null) {contracts[i].countryCode = "XX"}
 
@@ -490,7 +493,7 @@ function hostsOrderByCountry(settings, hosts, farmsDefinition) {
     hosts = addAlertsToHosts(hosts, farmsDefinition)
 
     // Adding a hostID number and rank to identify the hosts, as we are going to rearrange the list
-    for (var i = 0; i < hosts.length; i++) {
+    for (let i = 0; i < hosts.length; i++) {
         hosts[i].hostIdNumber = i
         hosts[i].rank = hosts.length - i
     }
@@ -505,9 +508,9 @@ function hostsOrderByCountry(settings, hosts, farmsDefinition) {
     ]
 
     // Iterating hosts
-    for (var i = 0; i < hosts.length; i++) {
+    for (let i = 0; i < hosts.length; i++) {
         var countryMatch = false
-        for (var j = 0; j < countries.length; j++) {
+        for (let j = 0; j < countries.length; j++) {
             if (hosts[i].countryCode == countries[j].countryCode) {
                 countryMatch = true
                 countries[j].hosts++
@@ -534,7 +537,7 @@ function hostsOrderByCountry(settings, hosts, farmsDefinition) {
     }
 
     // Unknown location
-    for (var i = 0; i < countries.length; i++) {
+    for (let i = 0; i < countries.length; i++) {
         if (countries[i].countryName == null) {
             countries[i].countryName = "Unknown location"
             countries[i].countryCode = "XX"
@@ -583,12 +586,12 @@ function hostsOrderByCountry(settings, hosts, farmsDefinition) {
     }
 
     // Rest of countries
-    for (var i = 0; i < countries.length; i++) {
+    for (let i = 0; i < countries.length; i++) {
         if (countries[i].countryCode != "EU") {
 
             // Determining first if there are hosts selected on this country, we might not need to show this country
             var countryWithSelectedHosts = false
-            for (var j = 0; j < countries[i].hostsList.length; j++) {
+            for (let j = 0; j < countries[i].hostsList.length; j++) {
                 if (countries[i].hostsList[j].onList == true) {
                     countryWithSelectedHosts = true
                 }
@@ -612,7 +615,7 @@ function hostsOrderByCountry(settings, hosts, farmsDefinition) {
             }
 
             // Iterating hosts
-            for (var j = 0; j < countries[i].hostsList.length; j++) {
+            for (let j = 0; j < countries[i].hostsList.length; j++) {
                 if (showMode == "all" || (showMode == "onlySelected" && countries[i].hostsList[j].onList == true)) { // In "onlySelected" mode, only show if selected
                     // Uptime calculation
                     var uptime = (countries[i].hostsList[j].recentsuccessfulinteractions/(countries[i].hostsList[j].recentsuccessfulinteractions + countries[i].hostsList[j].recentfailedinteractions)*100).toFixed(1)
@@ -632,10 +635,11 @@ function hostsOrderByCountry(settings, hosts, farmsDefinition) {
                         countries[i].hostsList[j].siastatsScore = "-"
                     }
                     // Score circle color
+                    let scoreCircleColor
                     if (countries[i].hostsList[j].siastatsScore == "-" || countries[i].hostsList[j].siastatsScore == "0") {
-                        var scoreCircleColor = "#cc4444"
+                        scoreCircleColor = "#cc4444"
                     } else {
-                        var scoreCircleColor = "#000"
+                        scoreCircleColor = "#000"
                     }
                                 
                     content = content + ' onchange="clickHost(this)">'
@@ -681,7 +685,7 @@ function hostsOrderByCountry(settings, hosts, farmsDefinition) {
     document.getElementById("hosts-table-content").innerHTML = content
 
     // Updating alerts
-    for (var i = 0; i < hosts.length; i++) {
+    for (let i = 0; i < hosts.length; i++) {
         // Disable checkbox on alert
         var checkId = "checkHost" + i
         if (settings.listMode == "whitelist" && hosts[i].alert == true) {
@@ -697,8 +701,8 @@ function hostsOrderByCountry(settings, hosts, farmsDefinition) {
 
 function addAlertsToHosts(hosts, farms) {
     // Adding alerts
-    for (var i = 0; i < hosts.length; i++) { // Each host
-        for (var j = 0; j < farms.length; j++) { // Each farm
+    for (let i = 0; i < hosts.length; i++) { // Each host
+        for (let j = 0; j < farms.length; j++) { // Each farm
             if (farms[j].alert == true) {
                 for (var k = 0; k < farms[j].hosts.length; k++) { // Each host in a farm
                     if (farms[j].hosts[k].pubkey == hosts[i].publickey.key) {
@@ -740,24 +744,23 @@ function hostsOrderBySetting(settings, hosts, farmsDefinition, orderBy) {
     var showMode = $('#showDropdown').find(":selected").val();
     
     // Adding alerts
-    var hosts = addAlertsToHosts(hosts, farmsDefinition)
-    var hostsOriginal = hosts
+    let hostsWithAlert = addAlertsToHosts(hosts, farmsDefinition)
 
     // Adding a hostID number and rank to identify the hosts, as we are going to rearrange the list
-    for (var i = 0; i < hosts.length; i++) {
-        hosts[i].hostIdNumber = i
-        hosts[i].rank = hosts.length - i
+    for (let i = 0; i < hostsWithAlert.length; i++) {
+        hostsWithAlert[i].hostIdNumber = i
+        hostsWithAlert[i].rank = hosts.length - i
     }
 
     // Adjusting parameters in the hostdb for the sorting
-    for (var i = 0; i < hosts.length; i++) {
-        hosts[i].storageprice = parseInt(hosts[i].storageprice)
-        hosts[i].uploadbandwidthprice = parseInt(hosts[i].uploadbandwidthprice)
-        hosts[i].downloadbandwidthprice = parseInt(hosts[i].downloadbandwidthprice)
-        hosts[i].collateralRatio = parseFloat((hosts[i].collateral / hosts[i].storageprice).toFixed(2))
-        if (hosts[i].countryName == null) {
-            hosts[i].countryName = "Unknown location"
-            hosts[i].countryCode = "XX"
+    for (let i = 0; i < hostsWithAlert.length; i++) {
+        hostsWithAlert[i].storageprice = parseInt(hostsWithAlert[i].storageprice)
+        hostsWithAlert[i].uploadbandwidthprice = parseInt(hostsWithAlert[i].uploadbandwidthprice)
+        hostsWithAlert[i].downloadbandwidthprice = parseInt(hostsWithAlert[i].downloadbandwidthprice)
+        hostsWithAlert[i].collateralRatio = parseFloat((hostsWithAlert[i].collateral / hostsWithAlert[i].storageprice).toFixed(2))
+        if (hostsWithAlert[i].countryName == null) {
+            hostsWithAlert[i].countryName = "Unknown location"
+            hostsWithAlert[i].countryCode = "XX"
         }
     }
 
@@ -826,7 +829,7 @@ function hostsOrderBySetting(settings, hosts, farmsDefinition, orderBy) {
             + '</tr>'
 
     // Iterating hosts
-    for (var j = 0; j < hosts.length; j++) {
+    for (let j = 0; j < hosts.length; j++) {
         if (showMode == "all" || (showMode="onlySelected" && hosts[j].onList == true)) {
         
             // Uptime calculation
@@ -885,7 +888,7 @@ function hostsOrderBySetting(settings, hosts, farmsDefinition, orderBy) {
     document.getElementById("hosts-table-content").innerHTML = content
 
     // Disabling boxes
-    for (var i = 0; i < boxesToDisable.length; i++) {
+    for (let i = 0; i < boxesToDisable.length; i++) {
         var checkId = "checkHost" + boxesToDisable[i]
         if (settings.listMode == "whitelist" || settings.listMode == "blacklist") {
             document.getElementById(checkId).disabled = true;
@@ -904,7 +907,7 @@ function hostsOrderByVersionOrScore(settings, hosts, farmsDefinition, method) {
     hosts = addAlertsToHosts(hosts, farmsDefinition)
 
     // Adding a hostID number and rank to identify the hosts, as we are going to rearrange the list
-    for (var i = 0; i < hosts.length; i++) {
+    for (let i = 0; i < hosts.length; i++) {
         hosts[i].hostIdNumber = i
         hosts[i].rank = hosts.length - i
     }
@@ -912,9 +915,9 @@ function hostsOrderByVersionOrScore(settings, hosts, farmsDefinition, method) {
     var group = []
     if (method == "version") {
         // Grouping by version
-        for (var i = 0; i < hosts.length; i++) {
+        for (let i = 0; i < hosts.length; i++) {
             var versionMatch = false
-            for (var j = 0; j < group.length; j++) {
+            for (let j = 0; j < group.length; j++) {
                 if (hosts[i].version == group[j].groupName) {
                     versionMatch = true
                     group[j].hosts++
@@ -944,14 +947,14 @@ function hostsOrderByVersionOrScore(settings, hosts, farmsDefinition, method) {
     } else if (method == "score") {
         // Grouping by SiaStats score
         // Creating empty array
-        for (var i = 0; i <= 10; i++) {
+        for (let i = 0; i <= 10; i++) {
             group.push({
                 groupName: i,
                 hosts: 0,
                 hostsList: []
             })
         }
-        for (var i = 0; i < hosts.length; i++) {
+        for (let i = 0; i < hosts.length; i++) {
             var s = hosts[i].siastatsScore
             if (s == "0" || s == "1" || s == "2" || s == "3" || s == "4" || s == "5" || s == "6" || s == "7" 
                 || s == "8" || s == "9" || s == "10") {
@@ -970,10 +973,10 @@ function hostsOrderByVersionOrScore(settings, hosts, farmsDefinition, method) {
 
     // Displaying
     var content = ""
-    for (var i = 0; i < group.length; i++) {
+    for (let i = 0; i < group.length; i++) {
         // Checking if there is at least one selected host on this version
         var versionWithSelectedHosts = false
-        for (var j = 0; j < group[i].hostsList.length; j++) {
+        for (let j = 0; j < group[i].hostsList.length; j++) {
             if (group[i].hostsList[j].onList == true) {
                 versionWithSelectedHosts = true
             }
@@ -1004,7 +1007,7 @@ function hostsOrderByVersionOrScore(settings, hosts, farmsDefinition, method) {
         }
 
         // Iterating hosts
-        for (var j = 0; j < group[i].hostsList.length; j++) {
+        for (let j = 0; j < group[i].hostsList.length; j++) {
             if (showMode == "all" || (showMode == "onlySelected" && group[i].hostsList[j].onList == true)) { // In "onlySelected" mode, only show if selected
             
                 // Uptime calculation
@@ -1025,10 +1028,11 @@ function hostsOrderByVersionOrScore(settings, hosts, farmsDefinition, method) {
                     group[i].hostsList[j].siastatsScore = "-"
                 }
                 // Score circle color
+                let scoreCircleColor
                 if (group[i].hostsList[j].siastatsScore == "-" || group[i].hostsList[j].siastatsScore == "0") {
-                    var scoreCircleColor = "#cc4444"
+                    scoreCircleColor = "#cc4444"
                 } else {
-                    var scoreCircleColor = "#000"
+                    scoreCircleColor = "#000"
                 }
                             
                 content = content + ' onchange="clickHost(this)">'
@@ -1075,7 +1079,7 @@ function hostsOrderByVersionOrScore(settings, hosts, farmsDefinition, method) {
     document.getElementById("hosts-table-content").innerHTML = content
 
     // Updating alerts
-    for (var i = 0; i < hosts.length; i++) {
+    for (let i = 0; i < hosts.length; i++) {
         // Disable checkbox on alert
         var checkId = "checkHost" + i
         if (settings.listMode == "whitelist" && hosts[i].alert == true) {
@@ -1110,7 +1114,7 @@ function clickHost(checkboxElem) {
 // Updates the count of hosts selected for the filter
 function updateFilterCount(hosts) {
     var filterCount = 0
-    for (var i = 0; i < hosts.length; i++) {
+    for (let i = 0; i < hosts.length; i++) {
         if (hosts[i].onList == true) {
             filterCount++
         }
@@ -1129,7 +1133,7 @@ function clickCountry(checkboxElem) {
                 hosts = addAlertsToHosts(hosts, farmsDefinition)
             
                 // Adding a hostID number and rank to identify the hosts, as we are going to rearrange the list
-                for (var i = 0; i < hosts.length; i++) {
+                for (let i = 0; i < hosts.length; i++) {
                     hosts[i].hostIdNumber = i
                     hosts[i].rank = hosts.length - i
                 }
@@ -1137,14 +1141,14 @@ function clickCountry(checkboxElem) {
                 var countryID = checkboxElem.id.slice(12)
                 
                 if (checkboxElem.checked) {
-                    for (var i = 0; i < hosts.length; i++) {
+                    for (let i = 0; i < hosts.length; i++) {
                         if (countryID == "EU") {
-                            var c = hosts[i].countryCode
+                            let c = hosts[i].countryCode
                             if (c == "BE" || c == "BG" || c == "CZ" || c == "DK" || c == "DE" || c == "EE" || c == "IE" || c == "EL" || c == "ES" || c == "FR" ||
                                 c == "HR" || c == "IT" || c == "CY" || c == "LV" || c == "LT" || c == "LU" || c == "HU" || c == "MT" || c == "NL" || c == "AT" ||
                                 c == "PL" || c == "PT" || c == "RO" || c == "SI" || c == "SK" || c == "FI" || c == "SE" || c == "GB" || c == "LI" || c == "IS" ||
                                 c == "NO") {
-                                    var checkHost = "checkHost" + hosts[i].hostIdNumber
+                                    let checkHost = "checkHost" + hosts[i].hostIdNumber
                                     if (settings.listMode != "whitelist" || hosts[i].alert != true) { // Avoids adding an unsafe host
                                         document.getElementById(checkHost).checked = true;
                                         hosts[i].onList = true
@@ -1153,7 +1157,7 @@ function clickCountry(checkboxElem) {
                             }
                         } else {
                             if (hosts[i].countryCode == countryID) {
-                                var checkHost = "checkHost" + hosts[i].hostIdNumber
+                                let checkHost = "checkHost" + hosts[i].hostIdNumber
                                 if (settings.listMode != "whitelist" || hosts[i].alert != true) { // Avoids adding an unsafe host
                                     document.getElementById(checkHost).checked = true;
                                     hosts[i].onList = true
@@ -1162,14 +1166,17 @@ function clickCountry(checkboxElem) {
                         }
                     }
                 } else {
-                    for (var i = 0; i < hosts.length; i++) {
+                    for (let i = 0; i < hosts.length; i++) {
+
+                        let checkHost = "checkHost" + hosts[i].hostIdNumber
+
                         if (countryID == "EU") {
-                            var c = hosts[i].countryCode
+                            let c = hosts[i].countryCode
                             if (c == "BE" || c == "BG" || c == "CZ" || c == "DK" || c == "DE" || c == "EE" || c == "IE" || c == "EL" || c == "ES" || c == "FR" ||
                                 c == "HR" || c == "IT" || c == "CY" || c == "LV" || c == "LT" || c == "LU" || c == "HU" || c == "MT" || c == "NL" || c == "AT" ||
                                 c == "PL" || c == "PT" || c == "RO" || c == "SI" || c == "SK" || c == "FI" || c == "SE" || c == "GB" || c == "LI" || c == "IS" ||
                                 c == "NO") {
-                                    var checkHost = "checkHost" + hosts[i].hostIdNumber
+                                    let checkHost = "checkHost" + hosts[i].hostIdNumber
                                     if (settings.listMode != "blacklist" || hosts[i].alert != true) { // Avoids adding an unsafe host
                                         document.getElementById(checkHost).checked = false;
                                         hosts[i].onList = false
@@ -1178,7 +1185,6 @@ function clickCountry(checkboxElem) {
                             }
                         } else {
                             if (hosts[i].countryCode == countryID) {
-                                var checkHost = "checkHost" + hosts[i].hostIdNumber
                                 if (settings.listMode != "blacklist" || hosts[i].alert != true) { // Avoids adding an unsafe host
                                     document.getElementById(checkHost).checked = false;
                                     hosts[i].onList = false
@@ -1209,17 +1215,17 @@ function clickVersionOrScore(checkboxElem, method) {
                 hosts = addAlertsToHosts(hosts, farmsDefinition)
         
                 // Adding a hostID number and rank to identify the hosts, as we are going to rearrange the list
-                for (var i = 0; i < hosts.length; i++) {
+                for (let i = 0; i < hosts.length; i++) {
                     hosts[i].hostIdNumber = i
                     hosts[i].rank = hosts.length - i
                 }
 
                 var groupID = checkboxElem.id.slice(12)
                 if (checkboxElem.checked) {
-                    for (var i = 0; i < hosts.length; i++) {
+                    for (let i = 0; i < hosts.length; i++) {
                         if ((hosts[i].version == groupID & method == 0) || (hosts[i].siastatsScore == groupID && method == 1)) { 
                             // Match of versions if method == 0 (version), match of scores of method == 1 (scores)
-                            var checkHost = "checkHost" + hosts[i].hostIdNumber
+                            let checkHost = "checkHost" + hosts[i].hostIdNumber
                             if (settings.listMode != "whitelist" || hosts[i].alert != true) { // Avoids adding an unsafe host
                                 document.getElementById(checkHost).checked = true;
                                 hosts[i].onList = true
@@ -1227,9 +1233,9 @@ function clickVersionOrScore(checkboxElem, method) {
                         }
                     }
                 } else {
-                    for (var i = 0; i < hosts.length; i++) {
+                    for (let i = 0; i < hosts.length; i++) {
                         if ((hosts[i].version == groupID & method == 0) || (hosts[i].siastatsScore == groupID && method == 1)) {
-                            var checkHost = "checkHost" + hosts[i].hostIdNumber
+                            let checkHost = "checkHost" + hosts[i].hostIdNumber
                             if (settings.listMode != "blacklist" || hosts[i].alert != true) { // Avoids adding an unsafe host
                                 document.getElementById(checkHost).checked = false;
                                 hosts[i].onList = false
@@ -1254,7 +1260,7 @@ function clearFilter() {
         $.getJSON(path.join(__dirname, "../databases/settings.json"), function (settings) {
             
             // Removes each host
-            for (var i = 0; i < hosts.length; i++) {
+            for (let i = 0; i < hosts.length; i++) {
                 if (hosts[i].onList == true) {
                     var checkHost = "checkHost" + i
                     document.getElementById(checkHost).checked = false;
@@ -1332,7 +1338,7 @@ function checkAlertedHosts(mode) {
             // Adding alerts
             var hostsWithAlert = addAlertsToHosts(hosts, farms)
             
-            for (var i = 0; i < hostsWithAlert.length; i++) {
+            for (let i = 0; i < hostsWithAlert.length; i++) {
                 if (hostsWithAlert[i].alert == true) {
                     // Depending on the filter mode
                     var checkId = "checkHost" + i
@@ -1363,51 +1369,40 @@ function checkAlertedHosts(mode) {
 // Farms checkbox actions
 function clickFarms() {
     if (document.getElementById("clickFarms").checked == true) {
+        let mode
         if (document.getElementById("r2").checked == true) {
             // Whitelist
-            var mode = "whitelist"
+            mode = "whitelist"
         } else if (document.getElementById("r3").checked == true) {
             // Blacklist
-            var mode = "blacklist"
+            mode = "blacklist"
         } else {
-            var mode = "disable"
+            mode = "disable"
         }
 
         if (mode != "disable") {
             $.getJSON(path.join(__dirname, "../databases/hosts.json"), function (hosts) {
                 $.getJSON(path.join(__dirname, "../databases/farms_definition.json"), function (farmsDefinition) {
-                    // Determining the show mode
-                    var showMode = $('#showDropdown').find(":selected").val();
 
                     // Check on each farm and marks the host if it is not the first one found on the farms definition list
-                    for (var i = 0; i < farmsDefinition.length; i++) {
+                    for (let i = 0; i < farmsDefinition.length; i++) {
                         var firstHostFound = false
-                        for (var j = 0; j < farmsDefinition[i].hosts.length; j++) {
+                        for (let j = 0; j < farmsDefinition[i].hosts.length; j++) {
                             for (var k = 0; k < hosts.length; k++) {
                                 if (farmsDefinition[i].hosts[j].pubkey == hosts[k].publickey.key) {
                                     if (firstHostFound == false) {
                                         // Do nothing with the first host of the farm identified, just update the boolean
                                         firstHostFound = true
                                     } else {
-                                        if (mode == "whitelist") {
-                                            hosts[k].onList = false
 
-                                            //Only check boxes if they are visible
-                                            var checkHost = "checkHost" + hosts[k].hostIdNumber
-                                            var elementExists = document.getElementById(checkHost)
-                                            if (elementExists != null) {
-                                                document.getElementById(checkHost).checked = false
-                                            }
+                                        let checkHost = "checkHost" + hosts[k].hostIdNumber
+                                        hosts[k].onList = (mode != "whitelist")
 
-                                        } else {
-                                            hosts[k].onList = true
-                                            
-                                            //Only check boxes if they are visible
-                                            var checkHost = "checkHost" + hosts[k].hostIdNumber
-                                            var elementExists = document.getElementById(checkHost)
-                                            if (elementExists != null) {
-                                                document.getElementById(checkHost).checked = true
-                                            }
+                                        //Only check boxes if they are visible
+                                        let elementExists = document.getElementById(checkHost)
+
+                                        if (elementExists != null) {
+                                            document.getElementById(checkHost).checked = (mode != "whitelist")
                                         }
                                     }
                                 }
@@ -1432,7 +1427,7 @@ function displayFarms(farms, contracts) {
     var tableAlert = ""
     var tableFarms = ""
     if (farms.length >= 3 || (farms.length == 2 && farms[1].hosts.length > 0)) {
-        for (var i = 1; i < farms.length; i++) {
+        for (let i = 1; i < farms.length; i++) {
             if (farms[i].hosts.length > 0) {
                 // Building a table, later we decide if we add it to one list or the other
                 var tableContracts = '<div class="table-content" style="margin: 25px 25px; background-color: #fff">'
@@ -1451,7 +1446,7 @@ function displayFarms(farms, contracts) {
                             + '<td colspan=3><strong><i class="fas fa-exclamation-triangle" style="font-size: 100%"></i> SiaStats alert: ' + farms[i].message + '</strong></td>'
                 }
 
-                for (var j = 0; j < farms[i].hosts.length; j++) {
+                for (let j = 0; j < farms[i].hosts.length; j++) {
                     // For each member of the farm
                     
                     // First, we need to identify the position on the contract list, to assign a correct checkbox ID
@@ -1513,8 +1508,8 @@ function autoFarms() {
         $.getJSON(path.join(__dirname, "../databases/farms.json"), function (farms) {
 
             // Iterate on farms. If alerted, select all, if regular farm, select all except the first host on list
-            for (var i = 1; i < farms.length; i++) {
-                for (var j = 0; j < farms[i].hosts.length; j++) {
+            for (let i = 1; i < farms.length; i++) {
+                for (let j = 0; j < farms[i].hosts.length; j++) {
                     if (farms[i].alert == true) { 
                         findAndMarkFarm(farms[i].hosts[j].contract, contracts, false)
                     } else if (farms[i].alert != true && j >= 1) {
