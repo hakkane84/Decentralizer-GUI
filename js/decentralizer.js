@@ -976,6 +976,7 @@ function hostsOrderByVersionOrScore(settings, hosts, farmsDefinition, method) {
         for (var j = 0; j < group[i].hostsList.length; j++) {
             if (group[i].hostsList[j].onList == true) {
                 versionWithSelectedHosts = true
+                break
             }
         }
 
