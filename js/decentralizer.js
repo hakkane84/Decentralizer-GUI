@@ -744,23 +744,23 @@ function hostsOrderBySetting(settings, hosts, farmsDefinition, orderBy) {
     var showMode = $('#showDropdown').find(":selected").val();
     
     // Adding alerts
-    let hostsWithAlert = addAlertsToHosts(hosts, farmsDefinition)
+    let hosts = addAlertsToHosts(hosts, farmsDefinition)
 
     // Adding a hostID number and rank to identify the hosts, as we are going to rearrange the list
-    for (let i = 0; i < hostsWithAlert.length; i++) {
-        hostsWithAlert[i].hostIdNumber = i
-        hostsWithAlert[i].rank = hosts.length - i
+    for (let i = 0; i < hosts.length; i++) {
+        hosts[i].hostIdNumber = i
+        hosts[i].rank = hosts.length - i
     }
 
     // Adjusting parameters in the hostdb for the sorting
-    for (let i = 0; i < hostsWithAlert.length; i++) {
-        hostsWithAlert[i].storageprice = parseInt(hostsWithAlert[i].storageprice)
-        hostsWithAlert[i].uploadbandwidthprice = parseInt(hostsWithAlert[i].uploadbandwidthprice)
-        hostsWithAlert[i].downloadbandwidthprice = parseInt(hostsWithAlert[i].downloadbandwidthprice)
-        hostsWithAlert[i].collateralRatio = parseFloat((hostsWithAlert[i].collateral / hostsWithAlert[i].storageprice).toFixed(2))
-        if (hostsWithAlert[i].countryName == null) {
-            hostsWithAlert[i].countryName = "Unknown location"
-            hostsWithAlert[i].countryCode = "XX"
+    for (let i = 0; i < hosts.length; i++) {
+        hosts[i].storageprice = parseInt(hosts[i].storageprice)
+        hosts[i].uploadbandwidthprice = parseInt(hosts[i].uploadbandwidthprice)
+        hosts[i].downloadbandwidthprice = parseInt(hosts[i].downloadbandwidthprice)
+        hosts[i].collateralRatio = parseFloat((hosts[i].collateral / hosts[i].storageprice).toFixed(2))
+        if (hosts[i].countryName == null) {
+            hosts[i].countryName = "Unknown location"
+            hosts[i].countryCode = "XX"
         }
     }
 
