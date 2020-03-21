@@ -106,18 +106,18 @@ article {
 .table-content th {
     border-bottom: 5px solid #888;
     height: 35px;
-    padding: 0px 5px
+    padding: 0px 5px;
 }
 .table-content td {
     border-bottom: 1px solid #777;
     height: 35px;
     font-size: 16px;
-    padding: 0px 5px
+    padding: 0px 5px;
 }
 
 .table-content tr:hover {
     transition: all 0.2s ease 0s;
-    background-color: #ccc
+    background-color: #ccc;
 }
 
 

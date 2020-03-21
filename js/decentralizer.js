@@ -352,7 +352,7 @@ function initialLoad() {
                         }
 
                         // Building the table
-                        var tableContracts = '<table class="table" style="margin: auto">'
+                        var tableContracts = '<table id="tableContracts" class="table" style="margin: auto">'
                             + '<thead>'
                                 + '<tr>'
                                     + '<th></th>'
@@ -441,7 +441,7 @@ function initialLoad() {
 
                         document.getElementById("table-contracts").innerHTML = tableContracts
 
-                        makeTablesSortable()
+                        makeTablesSortable("tableContracts")
 
                         // Default tab
                         $("#tab-contracts").fadeIn();
@@ -1663,8 +1663,9 @@ function endTour() {
     $("#tour8").hide()
 }
 
-function makeTablesSortable() {
-    $('th').click(function(){
+function makeTablesSortable(tableId) {
+    $('#' + tableId + ' th').css('cursor', 'pointer')
+    $('#' + tableId + ' th').click(function(){
         var table = $(this).parents('table').eq(0)
         var rows = table.find('tr:gt(0)').toArray().sort(comparer($(this).index()))
         this.asc = !this.asc
