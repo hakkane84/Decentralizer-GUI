@@ -360,8 +360,19 @@ function initialLoad() {
                                     + '<th><span>Country</span></th>'
                                     + '<th><span>Host</span></th>'
                                     + '<th><span>Data stored</span></th>'
-                                    + '<th><span>Value</span></th>'
-                                    + '<th><span>Storage</span></th>'
+                                    + '<th><span>Spent</span></th>'
+                                    + '<th><span>'
+                                        + '<div class="tooltip">Price' 
+                                        + '<span style="font-weight: normal" class="tooltiptext">Current storage price target in SC/TB/month</span></div>'
+                                    + '</span></th>'
+                                    + '<th><span>'
+                                        + '<div class="tooltip">Est. price' 
+                                        + '<span style="font-weight: normal" class="tooltiptext">Estimated price based on your prevous storage spendings in SC/TB/month</span></div>'
+                                    + '</span></th>'
+                                    + '<th><span>'
+                                        + '<div class="tooltip">Est. cost' 
+                                        + '<span style="font-weight: normal" class="tooltiptext">Estimated costs based on your all (total) spendings in SC/TB/month. With small stored data, this could be more, because fees are most of the costs</span></div>'
+                                    + '</span></th>'
                                     + '<th><span>'
                                         + '<div class="tooltip">SiaStats Score' 
                                             + '<span style="font-weight: normal" class="tooltiptext">Performance scores (on a 0-10 scale) provided by the SiaStats Hosts Monitor</span></div>'
@@ -388,7 +399,8 @@ function initialLoad() {
                                         + '</span>'
                                     + '</td>'
                                     + '<td>'
-                                        + contracts[i].netaddress
+                                        // With <p>, you can copy paste the data from the UI without any remaining whitespaces
+                                        + '<p>' + contracts[i].netaddress + '</p>'
 
                             // Adding alerts
                             if (contracts[i].alert == true) {
@@ -407,20 +419,36 @@ function initialLoad() {
                                     + '</td>'
                             
                             // Value
+                            let totalSpent = (contracts[i].totalcost/1000000000000000000000000) - (contracts[i].renterfunds/1000000000000000000000000)
                             tableContracts = tableContracts + '<td>'
-                                        + '<div class="tooltip"> ' + (contracts[i].totalcost/1000000000000000000000000).toFixed(2) + ' SC'
+                                        + '<div class="tooltip"> ' + Math.round(totalSpent) + ' SC'
                                             + '<span class="tooltiptext">'
+                                                + 'Allocated: ' + (contracts[i].totalcost/1000000000000000000000000).toFixed(2) + ' SC<br>'
+                                                + 'Spent: ' + (totalSpent).toFixed(2) + ' SC<br>'
+                                                + 'Remaining: ' + (contracts[i].renterfunds/1000000000000000000000000).toFixed(2) + ' SC<br><br>'
                                                 + 'Storage spent: ' + (contracts[i].storagespending/1000000000000000000000000).toFixed(2) + ' SC<br>'
                                                 + 'Upload spent: ' + (contracts[i].uploadspending/1000000000000000000000000).toFixed(2) + ' SC<br>'
                                                 + 'Download spent: ' + (contracts[i].downloadspending/1000000000000000000000000).toFixed(2) + ' SC<br>'
                                                 + 'Fees: ' + (contracts[i].fees/1000000000000000000000000).toFixed(2) + ' SC<br>'
-                                                + 'Remaining: ' + (contracts[i].renterfunds/1000000000000000000000000).toFixed(2) + ' SC'
                                             + '</span>'			
                                         + '</div>'
                                     + '</td>'
 
                             // Storageprice
-                            tableContracts = tableContracts + '<td>' + contracts[i].storageprice * 400 / 92592592592 + ' SC</td>'
+                            tableContracts = tableContracts + '<td>' + Math.round(contracts[i].storageprice * 400 / 92592592592) + ' SC</td>'
+
+                            let startDate = settings.lastsync - ((settings.consensusHeight - contracts[i].startheight) * 600000)
+                            let renewDate = startDate + ((contracts[i].endheight - contracts[i].startheight - settings.renewWindow) * 600000)
+                            let contractMonths = (renewDate - startDate) / 2592000000 // 30 days
+                            
+                            // Estimated price
+                            tableContracts = tableContracts + '<td>' +  Math.round(1000 / (contracts[i].size/1000000000) * (contracts[i].storagespending/1000000000000000000000000) / contractMonths) + ' SC</td>'
+                        
+                            // Estimated costs
+                            tableContracts = tableContracts + '<td>' +  Math.round(1000 / (contracts[i].size/1000000000) * (totalSpent) / contractMonths) + ' SC</td>'
+
+
+
 
                             // SiaStats scores
                             var scoreCircleColor = "#000"
