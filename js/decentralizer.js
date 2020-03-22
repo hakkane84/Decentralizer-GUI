@@ -347,6 +347,7 @@ function initialLoad() {
                                 if (contracts[i].hostpublickey.key == hosts[j].publickey.key) {
                                     // If the contract is in the host list, it is online
                                     contracts[i].online = true
+                                    contracts[i].storageprice = hosts[j].storageprice
                                 }
                             }
                         }
@@ -360,6 +361,7 @@ function initialLoad() {
                                     + '<th><span>Host</span></th>'
                                     + '<th><span>Data stored</span></th>'
                                     + '<th><span>Value</span></th>'
+                                    + '<th><span>Storage</span></th>'
                                     + '<th><span>'
                                         + '<div class="tooltip">SiaStats Score' 
                                             + '<span style="font-weight: normal" class="tooltiptext">Performance scores (on a 0-10 scale) provided by the SiaStats Hosts Monitor</span></div>'
@@ -403,7 +405,9 @@ function initialLoad() {
                                     + '<td>'
                                         + (contracts[i].size/1000000000).toFixed(2) +' GB'
                                     + '</td>'
-                                    + '<td>'
+                            
+                            // Value
+                            tableContracts = tableContracts + '<td>'
                                         + '<div class="tooltip"> ' + (contracts[i].totalcost/1000000000000000000000000).toFixed(2) + ' SC'
                                             + '<span class="tooltiptext">'
                                                 + 'Storage spent: ' + (contracts[i].storagespending/1000000000000000000000000).toFixed(2) + ' SC<br>'
@@ -414,6 +418,9 @@ function initialLoad() {
                                             + '</span>'			
                                         + '</div>'
                                     + '</td>'
+
+                            // Storageprice
+                            tableContracts = tableContracts + '<td>' + contracts[i].storageprice * 400 / 92592592592 + ' SC</td>'
 
                             // SiaStats scores
                             var scoreCircleColor = "#000"
