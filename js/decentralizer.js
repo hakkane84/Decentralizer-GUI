@@ -34,6 +34,17 @@ function initialLoad() {
                 $.getJSON(path.join(__dirname, "../databases/farms.json"), function (farms) {
                     $.getJSON(path.join(__dirname, "../databases/farms_definition.json"), function (farmsDefinition) {
 
+                        // Checking if the host is online, and append storageprice
+                        for (var i = 0; i < contracts.length; i++) {
+                            for (var j = 0; j < hosts.length; j++) {
+                                if (contracts[i].hostpublickey.key == hosts[j].publickey.key) {
+                                    // If the contract is in the host list, it is online
+                                    contracts[i].online = true
+                                    contracts[i].storageprice = hosts[j].storageprice
+                                }
+                            }
+                        }
+
                         // Show an alert if farms are found
                         for (var i = 0; i < farms.length; i++) {
                             if (farms[i].alert == true) {
@@ -54,10 +65,32 @@ function initialLoad() {
                         updateFilterCount(hosts)
 
                         // Post processing host coordinates for the map rendering
+                        let valueSum = 0
+                        let dataSum = 0
+                        let spentSum = 0
+                        let pricesSum = 0
+                        let priceMultiplier = 0
+                        for (var i = 0; i < contracts.length; i++) {
+                            valueSum += contracts[i].totalcost/1000000000000000000000000
+                            dataSum += contracts[i].size/1000000000
+                            spentSum += ((contracts[i].totalcost/1000000000000000000000000) - (contracts[i].renterfunds/1000000000000000000000000)) || 0
+                            let currPrice = contracts[i].storageprice * 400 / 92592592592
+                            if (!isNaN(currPrice)) {
+                                priceMultiplier += 1
+                                pricesSum += currPrice
+                            }
+                        }
+                        let priceAerage = pricesSum / priceMultiplier
+
                         var processed_json = [{ // Starts with the renter geolocation
                             id: "Renter",
                             lon: settings.userLon,
-                            lat: settings.userLat
+                            lat: settings.userLat,
+                            country: '',
+                            data: dataSum.toFixed(2),
+                            spent: spentSum.toFixed(2),
+                            value: valueSum.toFixed(2),
+                            price: Math.round(priceAerage)
                         }]
                         for (var i = 0; i < contracts.length; i++) {
                             if (contracts[i].lon != null && contracts[i].lat != null && contracts[i].lon != "" && contracts[i].lat != "") { // Only if we have its geolocation
@@ -65,8 +98,11 @@ function initialLoad() {
                                     id: contracts[i].netaddress,
                                     lon: contracts[i].lon,
                                     lat: contracts[i].lat,
+                                    country: contracts[i].countryName,
+                                    data: (contracts[i].size/1000000000).toFixed(2),
+                                    spent: ((contracts[i].totalcost/1000000000000000000000000) - (contracts[i].renterfunds/1000000000000000000000000)).toFixed(2),
                                     value: (contracts[i].totalcost/1000000000000000000000000).toFixed(2),
-                                    data: (contracts[i].size/1000000000).toFixed(2)
+                                    price: Math.round(contracts[i].storageprice * 400 / 92592592592),
                                 })
                             }
                         }
@@ -101,7 +137,12 @@ function initialLoad() {
     
                                 tooltip: {
                                     headerFormat: '',
-                                    pointFormat: '<b>{point.id}</b><br>Data:{point.data} GB<br>Value:{point.value} SC',
+                                    pointFormat: '<b>{point.id}</b><br>'
+                                                    + '<i>{point.country}</i><br>'
+                                                    + 'Data: {point.data} GB<br>'
+                                                    + 'Spent: {point.spent} SC<br>'
+                                                    + 'Allocated: {point.value} SC<br>'
+                                                    + 'Price: {point.price} SC/TB/m',
                                     backgroundColor: '#445555',
                                     borderRadius: 10,
                                     style: {
@@ -337,17 +378,6 @@ function initialLoad() {
                                             contracts[k].message = farms[i].message
                                         }
                                     }
-                                }
-                            }
-                        }
-
-                        // Checking if the host is online
-                        for (var i = 0; i < contracts.length; i++) {
-                            for (var j = 0; j < hosts.length; j++) {
-                                if (contracts[i].hostpublickey.key == hosts[j].publickey.key) {
-                                    // If the contract is in the host list, it is online
-                                    contracts[i].online = true
-                                    contracts[i].storageprice = hosts[j].storageprice
                                 }
                             }
                         }
