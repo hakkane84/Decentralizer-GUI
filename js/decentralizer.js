@@ -363,15 +363,10 @@ function initialLoad() {
                                     + '<th><span>Spent</span></th>'
                                     + '<th><span>'
                                         + '<div class="tooltip">Price' 
-                                        + '<span style="font-weight: normal" class="tooltiptext">Current storage price target in SC/TB/month</span></div>'
-                                    + '</span></th>'
-                                    + '<th><span>'
-                                        + '<div class="tooltip">Est. price' 
-                                        + '<span style="font-weight: normal" class="tooltiptext">Estimated price based on your prevous storage spendings in SC/TB/month</span></div>'
-                                    + '</span></th>'
-                                    + '<th><span>'
-                                        + '<div class="tooltip">Est. cost' 
-                                        + '<span style="font-weight: normal" class="tooltiptext">Estimated costs based on your all (total) spendings in SC/TB/month. With small stored data, this could be more, because fees are most of the costs</span></div>'
+                                        + '<span style="font-weight: normal" class="tooltiptext">Current storage price target in SC/TB/month<br><br>'
+                                        + 'Estimated price based on your prevous storage spendings in SC/TB/month<br>'
+                                        + 'Estimated costs based on your all (total) spendings in SC/TB/month. With small stored data, this could be more, because fees are most of the costs'
+                                        + '</span></div>'
                                     + '</span></th>'
                                     + '<th><span>'
                                         + '<div class="tooltip">SiaStats Score' 
@@ -418,7 +413,7 @@ function initialLoad() {
                                         + (contracts[i].size/1000000000).toFixed(2) +' GB'
                                     + '</td>'
                             
-                            // Value
+                            // Spent
                             let totalSpent = (contracts[i].totalcost/1000000000000000000000000) - (contracts[i].renterfunds/1000000000000000000000000)
                             tableContracts = tableContracts + '<td>'
                                         + '<div class="tooltip"> ' + Math.round(totalSpent) + ' SC'
@@ -434,18 +429,25 @@ function initialLoad() {
                                         + '</div>'
                                     + '</td>'
 
-                            // Storageprice
-                            tableContracts = tableContracts + '<td>' + Math.round(contracts[i].storageprice * 400 / 92592592592) + ' SC</td>'
 
+                            // Storageprice
+                            let storagePrice = Math.round(contracts[i].storageprice * 400 / 92592592592)
                             let startDate = settings.lastsync - ((settings.consensusHeight - contracts[i].startheight) * 600000)
                             let renewDate = startDate + ((contracts[i].endheight - contracts[i].startheight - settings.renewWindow) * 600000)
                             let contractMonths = (renewDate - startDate) / 2592000000 // 30 days
-                            
                             // Estimated price
-                            tableContracts = tableContracts + '<td>' +  Math.round(1000 / (contracts[i].size/1000000000) * (contracts[i].storagespending/1000000000000000000000000) / contractMonths) + ' SC</td>'
-                        
+                            let estimatedPrice = Math.round(1000 / (contracts[i].size/1000000000) * (contracts[i].storagespending/1000000000000000000000000) / contractMonths)
                             // Estimated costs
-                            tableContracts = tableContracts + '<td>' +  Math.round(1000 / (contracts[i].size/1000000000) * (totalSpent) / contractMonths) + ' SC</td>'
+                            let estimatedCost =  Math.round(1000 / (contracts[i].size/1000000000) * (totalSpent) / contractMonths)
+                            tableContracts = tableContracts + '<td>'
+                                        + '<div class="tooltip"> ' + storagePrice + ' SC'
+                                            + '<span class="tooltiptext">'
+                                                + 'Estimated  price: ' + estimatedPrice + ' SC<br>'
+                                                + 'Estimated cost: ' + estimatedCost + ' SC<br>'
+                                            + '</span>'			
+                                        + '</div>'
+                                    + '</td>'
+
 
 
 
