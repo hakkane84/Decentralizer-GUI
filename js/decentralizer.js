@@ -35,8 +35,8 @@ function initialLoad() {
                     $.getJSON(path.join(__dirname, "../databases/farms_definition.json"), function (farmsDefinition) {
 
                         // Checking if the host is online, and append storageprice
-                        for (var i = 0; i < contracts.length; i++) {
-                            for (var j = 0; j < hosts.length; j++) {
+                        for (let i = 0; i < contracts.length; i++) {
+                            for (let j = 0; j < hosts.length; j++) {
                                 if (contracts[i].hostpublickey.key == hosts[j].publickey.key) {
                                     // If the contract is in the host list, it is online
                                     contracts[i].online = true
@@ -70,7 +70,7 @@ function initialLoad() {
                         let spentSum = 0
                         let pricesSum = 0
                         let priceMultiplier = 0
-                        for (var i = 0; i < contracts.length; i++) {
+                        for (let i = 0; i < contracts.length; i++) {
                             valueSum += contracts[i].totalcost/1000000000000000000000000
                             dataSum += contracts[i].size/1000000000
                             spentSum += ((contracts[i].totalcost/1000000000000000000000000) - (contracts[i].renterfunds/1000000000000000000000000)) || 0
@@ -383,7 +383,7 @@ function initialLoad() {
                         }
 
                         // Building the table
-                        var tableContracts = '<table id="tableContracts" class="table" style="margin: auto">'
+                        let tableContracts = '<table id="tableContracts" class="table" style="margin: auto">'
                             + '<thead>'
                                 + '<tr>'
                                     + '<th></th>'
