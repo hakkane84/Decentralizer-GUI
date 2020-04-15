@@ -41,6 +41,8 @@ function initialLoad() {
                                     // If the contract is in the host list, it is online
                                     contracts[i].online = true
                                     contracts[i].storageprice = hosts[j].storageprice
+                                    contracts[i].downloadbandwidthprice = hosts[j].downloadbandwidthprice
+                                    contracts[i].uploadbandwidthprice = hosts[j].uploadbandwidthprice
                                 }
                             }
                         }
@@ -462,6 +464,8 @@ function initialLoad() {
 
                             // Storageprice
                             let storagePrice = Math.round(contracts[i].storageprice * 400 / 92592592592)
+                            let downloadbandwidthPrice = Math.round(contracts[i].downloadbandwidthprice * 400 / 92592592592)
+                            let uploadbandwidthPrice = Math.round(contracts[i].uploadbandwidthprice * 400 / 92592592592)
                             let startDate = settings.lastsync - ((settings.consensusHeight - contracts[i].startheight) * 600000)
                             let renewDate = startDate + ((contracts[i].endheight - contracts[i].startheight - settings.renewWindow) * 600000)
                             let contractMonths = (renewDate - startDate) / 2592000000 // 30 days
@@ -474,6 +478,8 @@ function initialLoad() {
                                             + '<span class="tooltiptext">'
                                                 + 'Estimated  price: ' + estimatedPrice + ' SC<br>'
                                                 + 'Estimated cost: ' + estimatedCost + ' SC<br>'
+                                                + 'Download price: ' + downloadbandwidthPrice + ' SC<br>'
+                                                + 'Upload  price: ' + uploadbandwidthPrice + ' SC<br>'
                                             + '</span>'			
                                         + '</div>'
                                     + '</td>'
