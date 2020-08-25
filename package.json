@@ -24,7 +24,7 @@
     "dependencies": {
         "axios": "^0.18.1",
         "babel-runtime": "^6.26.0",
-        "highcharts": "^7.1.1",
+        "highcharts": "^7.2.2",
         "jquery": "^3.4.1",
         "proj4": "^2.5.0",
         "sia.js": "^0.4.2"
