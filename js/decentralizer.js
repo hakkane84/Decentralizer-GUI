@@ -34,6 +34,19 @@ function initialLoad() {
                 $.getJSON(path.join(__dirname, "../databases/farms.json"), function (farms) {
                     $.getJSON(path.join(__dirname, "../databases/farms_definition.json"), function (farmsDefinition) {
 
+                        // Checking if the host is online, and append storageprice
+                        for (let i = 0; i < contracts.length; i++) {
+                            for (let j = 0; j < hosts.length; j++) {
+                                if (contracts[i].hostpublickey.key == hosts[j].publickey.key) {
+                                    // If the contract is in the host list, it is online
+                                    contracts[i].online = true
+                                    contracts[i].storageprice = hosts[j].storageprice
+                                    contracts[i].downloadbandwidthprice = hosts[j].downloadbandwidthprice
+                                    contracts[i].uploadbandwidthprice = hosts[j].uploadbandwidthprice
+                                }
+                            }
+                        }
+
                         // Show an alert if farms are found
                         for (var i = 0; i < farms.length; i++) {
                             if (farms[i].alert == true) {
@@ -54,10 +67,32 @@ function initialLoad() {
                         updateFilterCount(hosts)
 
                         // Post processing host coordinates for the map rendering
+                        let valueSum = 0
+                        let dataSum = 0
+                        let spentSum = 0
+                        let pricesSum = 0
+                        let priceMultiplier = 0
+                        for (let i = 0; i < contracts.length; i++) {
+                            valueSum += contracts[i].totalcost/1000000000000000000000000
+                            dataSum += contracts[i].size/1000000000
+                            spentSum += ((contracts[i].totalcost/1000000000000000000000000) - (contracts[i].renterfunds/1000000000000000000000000)) || 0
+                            let currPrice = contracts[i].storageprice * 400 / 92592592592
+                            if (!isNaN(currPrice)) {
+                                priceMultiplier += 1
+                                pricesSum += currPrice
+                            }
+                        }
+                        let priceAerage = pricesSum / priceMultiplier
+
                         var processed_json = [{ // Starts with the renter geolocation
                             id: "Renter",
                             lon: settings.userLon,
-                            lat: settings.userLat
+                            lat: settings.userLat,
+                            country: '',
+                            data: dataSum.toFixed(2),
+                            spent: spentSum.toFixed(2),
+                            value: valueSum.toFixed(2),
+                            price: Math.round(priceAerage)
                         }]
                         for (var i = 0; i < contracts.length; i++) {
                             if (contracts[i].lon != null && contracts[i].lat != null && contracts[i].lon != "" && contracts[i].lat != "") { // Only if we have its geolocation
@@ -65,8 +100,11 @@ function initialLoad() {
                                     id: contracts[i].netaddress,
                                     lon: contracts[i].lon,
                                     lat: contracts[i].lat,
+                                    country: contracts[i].countryName,
+                                    data: (contracts[i].size/1000000000).toFixed(2),
+                                    spent: ((contracts[i].totalcost/1000000000000000000000000) - (contracts[i].renterfunds/1000000000000000000000000)).toFixed(2),
                                     value: (contracts[i].totalcost/1000000000000000000000000).toFixed(2),
-                                    data: (contracts[i].size/1000000000).toFixed(2)
+                                    price: Math.round(contracts[i].storageprice * 400 / 92592592592),
                                 })
                             }
                         }
@@ -101,7 +139,12 @@ function initialLoad() {
     
                                 tooltip: {
                                     headerFormat: '',
-                                    pointFormat: '<b>{point.id}</b><br>Data:{point.data} GB<br>Value:{point.value} SC',
+                                    pointFormat: '<b>{point.id}</b><br>'
+                                                    + '<i>{point.country}</i><br>'
+                                                    + 'Data: {point.data} GB<br>'
+                                                    + 'Spent: {point.spent} SC<br>'
+                                                    + 'Allocated: {point.value} SC<br>'
+                                                    + 'Price: {point.price} SC/TB/m',
                                     backgroundColor: '#445555',
                                     borderRadius: 10,
                                     style: {
@@ -341,25 +384,22 @@ function initialLoad() {
                             }
                         }
 
-                        // Checking if the host is online
-                        for (var i = 0; i < contracts.length; i++) {
-                            for (var j = 0; j < hosts.length; j++) {
-                                if (contracts[i].hostpublickey.key == hosts[j].publickey.key) {
-                                    // If the contract is in the host list, it is online
-                                    contracts[i].online = true
-                                }
-                            }
-                        }
-
                         // Building the table
-                        var tableContracts = '<table class="table" style="margin: auto">'
+                        let tableContracts = '<table id="tableContracts" class="table" style="margin: auto">'
                             + '<thead>'
                                 + '<tr>'
                                     + '<th></th>'
                                     + '<th><span>Country</span></th>'
                                     + '<th><span>Host</span></th>'
                                     + '<th><span>Data stored</span></th>'
-                                    + '<th><span>Value</span></th>'
+                                    + '<th><span>Spent</span></th>'
+                                    + '<th><span>'
+                                        + '<div class="tooltip">Price' 
+                                        + '<span style="font-weight: normal" class="tooltiptext">Current storage price target in SC/TB/month<br><br>'
+                                        + 'Estimated price based on your prevous storage spendings in SC/TB/month<br>'
+                                        + 'Estimated costs based on your all (total) spendings in SC/TB/month. With small stored data, this could be more, because fees are most of the costs'
+                                        + '</span></div>'
+                                    + '</span></th>'
                                     + '<th><span>'
                                         + '<div class="tooltip">SiaStats Score' 
                                             + '<span style="font-weight: normal" class="tooltiptext">Performance scores (on a 0-10 scale) provided by the SiaStats Hosts Monitor</span></div>'
@@ -386,7 +426,8 @@ function initialLoad() {
                                         + '</span>'
                                     + '</td>'
                                     + '<td>'
-                                        + contracts[i].netaddress
+                                        // With <p>, you can copy paste the data from the UI without any remaining whitespaces
+                                        + '<p>' + contracts[i].netaddress + '</p>'
 
                             // Adding alerts
                             if (contracts[i].alert == true) {
@@ -403,17 +444,49 @@ function initialLoad() {
                                     + '<td>'
                                         + (contracts[i].size/1000000000).toFixed(2) +' GB'
                                     + '</td>'
-                                    + '<td>'
-                                        + '<div class="tooltip"> ' + (contracts[i].totalcost/1000000000000000000000000).toFixed(2) + ' SC'
+                            
+                            // Spent
+                            let totalSpent = (contracts[i].totalcost/1000000000000000000000000) - (contracts[i].renterfunds/1000000000000000000000000)
+                            tableContracts = tableContracts + '<td>'
+                                        + '<div class="tooltip"> ' + Math.round(totalSpent) + ' SC'
                                             + '<span class="tooltiptext">'
+                                                + 'Allocated: ' + (contracts[i].totalcost/1000000000000000000000000).toFixed(2) + ' SC<br>'
+                                                + 'Spent: ' + (totalSpent).toFixed(2) + ' SC<br>'
+                                                + 'Remaining: ' + (contracts[i].renterfunds/1000000000000000000000000).toFixed(2) + ' SC<br><br>'
                                                 + 'Storage spent: ' + (contracts[i].storagespending/1000000000000000000000000).toFixed(2) + ' SC<br>'
                                                 + 'Upload spent: ' + (contracts[i].uploadspending/1000000000000000000000000).toFixed(2) + ' SC<br>'
                                                 + 'Download spent: ' + (contracts[i].downloadspending/1000000000000000000000000).toFixed(2) + ' SC<br>'
                                                 + 'Fees: ' + (contracts[i].fees/1000000000000000000000000).toFixed(2) + ' SC<br>'
-                                                + 'Remaining: ' + (contracts[i].renterfunds/1000000000000000000000000).toFixed(2) + ' SC'
                                             + '</span>'			
                                         + '</div>'
                                     + '</td>'
+
+
+                            // Storageprice
+                            let storagePrice = Math.round(contracts[i].storageprice * 400 / 92592592592)
+                            let downloadbandwidthPrice = Math.round(contracts[i].downloadbandwidthprice / 1000000000000)
+                            let uploadbandwidthPrice = Math.round(contracts[i].uploadbandwidthprice / 1000000000000)
+                            let startDate = settings.lastsync - ((settings.consensusHeight - contracts[i].startheight) * 600000)
+                            let renewDate = startDate + ((contracts[i].endheight - contracts[i].startheight - settings.renewWindow) * 600000)
+                            let contractMonths = (renewDate - startDate) / 2592000000 // 30 days
+                            // Estimated price
+                            let estimatedPrice = Math.round(1000 / (contracts[i].size/1000000000) * (contracts[i].storagespending/1000000000000000000000000) / contractMonths)
+                            // Estimated costs
+                            let estimatedCost =  Math.round(1000 / (contracts[i].size/1000000000) * (totalSpent) / contractMonths)
+                            tableContracts = tableContracts + '<td>'
+                                        + '<div class="tooltip"> ' + storagePrice + ' SC'
+                                            + '<span class="tooltiptext">'
+                                                + 'Estimated  price: ' + estimatedPrice + ' SC<br>'
+                                                + 'Estimated cost: ' + estimatedCost + ' SC<br>'
+                                                + 'Download price: ' + downloadbandwidthPrice + ' SC<br>'
+                                                + 'Upload  price: ' + uploadbandwidthPrice + ' SC<br>'
+                                            + '</span>'			
+                                        + '</div>'
+                                    + '</td>'
+
+
+
+
 
                             // SiaStats scores
                             var scoreCircleColor = "#000"
@@ -440,6 +513,8 @@ function initialLoad() {
                         tableContracts = tableContracts + '</thead></table>' // Finish table
 
                         document.getElementById("table-contracts").innerHTML = tableContracts
+
+                        makeTablesSortable("tableContracts")
 
                         // Default tab
                         $("#tab-contracts").fadeIn();
@@ -1659,4 +1734,33 @@ function endTour() {
     }, 500);
 
     $("#tour8").hide()
+}
+
+function makeTablesSortable(tableId) {
+    $('#' + tableId + ' th').css('cursor', 'pointer')
+    $('#' + tableId + ' th').click(function(){
+        let table = $(this).parents('table').eq(0)
+        let rows = table.find('tr:gt(0)').toArray().sort(comparer($(this).index()))
+        this.asc = !this.asc
+        if (!this.asc){rows = rows.reverse()}
+        for (let i = 0; i < rows.length; i++){table.append(rows[i])}
+    })
+}
+
+// table sorting comparer
+function comparer(index) {
+    return function(a, b) {
+        let valA = getCellValue(a, index), valB = getCellValue(b, index)
+        return $.isNumeric(valA) && $.isNumeric(valB) ? valA - valB : valA.toString().localeCompare(valB)
+    }
+}
+function getCellValue(row, index){
+    let originCellVal = $(row).children('td').eq(index).text()
+    let cellVal = originCellVal.replace(' SC', '')
+    cellVal = cellVal.replace(' GB', '')
+    // if " SC" or " GB" found in string:
+    if (cellVal !== originCellVal) {
+        cellVal = parseFloat(cellVal)
+    }
+    return cellVal
 }

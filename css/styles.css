@@ -1,14 +1,15 @@
 body {
     font-family: 'Lato', sans-serif;
     background: #eee; 
+    margin: 0;
 }
 
 .mega-container {
-    height: calc(100% - 110px);
-    width: calc(100% - 275px);
+    height: calc(100% - 100px);
+    width: calc(100% - 200px);
     position: absolute;
-    top: 100;
-    left: 250;
+    top: 100px;
+    left: 200px;
     overflow: auto;
 }
 
@@ -44,9 +45,9 @@ body {
 
 .footer {
     position: fixed;
-    left: 250;
+    left: 200px;
     bottom: 0;
-    width: calc(100% - 275px);
+    width: calc(100% - 200px);
     background-color: #728081;
     color: #fff;
     text-align: left;
@@ -54,18 +55,18 @@ body {
 
 /* Navigation side bar */
 nav {
-    width: 250px;
-    height: calc(100% - 110px);
+    width: 200px;
+    height: calc(100% - 100px);
     position: absolute;
     top: 100;
     left: 0;
     background: #41494a;
-    margin: 0px 0px 0px 8px;
+    margin: 0px;
     color: #ddd
 }
 
 article {
-    margin-left: 260px;
+    margin-left: 200px;
 }
 
 /* Navigation bar table */
@@ -106,18 +107,18 @@ article {
 .table-content th {
     border-bottom: 5px solid #888;
     height: 35px;
-    padding: 0px 5px
+    padding: 0px 5px;
 }
 .table-content td {
     border-bottom: 1px solid #777;
     height: 35px;
     font-size: 16px;
-    padding: 0px 5px
+    padding: 0px 5px;
 }
 
 .table-content tr:hover {
     transition: all 0.2s ease 0s;
-    background-color: #ccc
+    background-color: #ccc;
 }
 
 
