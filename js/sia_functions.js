@@ -148,7 +148,7 @@ function siaHosts(siastatsGeoloc, siastatsFarms) {
             var allHosts = hosts.hosts
             // Filtering only the active and accepting contracts. If I was using the /hostdb/active, it would show less hosts after applying a filter
             var active = []
-            for (var i = 0; i < allHosts.length; i++) {
+            for (let i = 0; i < allHosts.length; i++) {
                 if (allHosts[i].scanhistory != null) { // It has already one scan
                     if (allHosts[i].scanhistory[allHosts[i].scanhistory.length-1].success == true
                         && allHosts[i].acceptingcontracts == true) {
@@ -218,9 +218,9 @@ function hostsScore(siastatsGeoloc, siastatsFarms, active, hostNum) {
 function hostsProcessing(siastatsGeoloc, siastatsFarms, hostdb) {
     // Assigns IPs to the hostdb and determines the hosts that need additional geolocation
     var hostsToGeoloc = [] // Entries numbers that need to be geolocated locally by Decentralizer
-    for (var i = 0; i < hostdb.length; i++) { // For each host
+    for (let i = 0; i < hostdb.length; i++) { // For each host
         var matchBool = false
-        for (var j = 0; j < siastatsGeoloc.length; j++) { // For each geolocation in list
+        for (let j = 0; j < siastatsGeoloc.length; j++) { // For each geolocation in list
             if (hostdb[i].publickeystring == siastatsGeoloc[j].pubkey) {
                 // Match, update hostdb entry
                 matchBool = true
@@ -244,8 +244,7 @@ function hostsProcessing(siastatsGeoloc, siastatsFarms, hostdb) {
 
     document.getElementById("overlayMessage").innerHTML = "Number of additional hosts to be geolocated: " + hostsToGeoloc.length
     if (hostsToGeoloc.length > 0) {
-        var i = 0
-        requestIP(siastatsFarms, hostdb, hostsToGeoloc, i, siastatsGeoloc)
+        requestIP(siastatsFarms, hostdb, hostsToGeoloc, 0, siastatsGeoloc)
     } else {
         // No additional host to geolocate, save and proceed to next step
         compareOldDb(hostdb, siastatsFarms, siastatsGeoloc)
@@ -302,8 +301,8 @@ function compareOldDb(hostdb, siastatsFarms, siastatsGeoloc) {
     fs.readFile(path.join(__dirname, "../databases/hosts.json"), 'utf8', function (err, data) { if (!err) { 
         var oldHosts = JSON.parse(data);
 
-        for (var i = 0; i < hostdb.length; i++) {
-            for (var j = 0; j < oldHosts.length; j++) {
+        for (let i = 0; i < hostdb.length; i++) {
+            for (let j = 0; j < oldHosts.length; j++) {
                 if (hostdb[i].publickey.key == oldHosts[j].publickey.key) { // Match of hosts
                     if (oldHosts[j].onList == true) {
                         // Add the boolean to the new hostdb
@@ -339,7 +338,7 @@ function siaContracts(siastatsFarms, siastatsGeoloc) {
 
             if (contracts.length == 0) {
                 // Empty files
-                var contracts = []
+                contracts = []
                 try { fs.writeFileSync(path.join(__dirname, "../databases/contracts.json"), JSON.stringify(contracts), 'utf-8'); }
                 catch(e) { alert('Failed to save the file contracts.json\n' + e);}
 
@@ -352,7 +351,7 @@ function siaContracts(siastatsFarms, siastatsGeoloc) {
                 // Considering only the contracts good for upload and good for renew, this is, active
                 // (sia returns active and inactive all together)
                 var activeContracts = []
-                for (var i = 0; i < contracts.length; i++) {
+                for (let i = 0; i < contracts.length; i++) {
                     if (contracts[i].goodforupload == false && contracts[i].goodforrenew == false) {
                         // Inactive contract, do not consider further
                     } else {
@@ -389,9 +388,9 @@ function contractsIpAssign(siastatsFarms, contracts, siastatsGeoloc) {
 
     // Assigns IPs to the contracts and determines the hosts that need additional geolocation
     var contractsToGeoloc = [] // Entries numbers that need to be geolocated locally by Decentralizer
-    for (var i = 0; i < contracts.length; i++) { // For each contract
+    for (let i = 0; i < contracts.length; i++) { // For each contract
         var matchBool = false
-        for (var j = 0; j < siastatsGeoloc.length; j++) { // For each geolocation in list
+        for (let j = 0; j < siastatsGeoloc.length; j++) { // For each geolocation in list
             if (contracts[i].hostpublickey.key == siastatsGeoloc[j].pubkey2) {
                 // Match, update hostdb entry
                 matchBool = true
@@ -413,8 +412,7 @@ function contractsIpAssign(siastatsFarms, contracts, siastatsGeoloc) {
 
     document.getElementById("overlayMessage").innerHTML = "Number of additional contracts to be geolocated: " + contractsToGeoloc.length
     if (contractsToGeoloc.length > 0) {
-        var i = 0
-        requestContractIP(siastatsFarms, contracts, contractsToGeoloc, i)
+        requestContractIP(siastatsFarms, contracts, contractsToGeoloc, 0)
     } else {
         // No additional host to geolocate, save and proceed to next step
         try { fs.writeFileSync(path.join(__dirname, "../databases/contracts.json"), JSON.stringify(contracts), 'utf-8'); }
@@ -479,9 +477,9 @@ function processHosts(siastatsFarms, contracts) {
 
     // Finding centralized farms
     var hostsGroups = []
-    for (var i = 0; i < contracts.length; i++) { // For each contract
+    for (let i = 0; i < contracts.length; i++) { // For each contract
         var hostInGroupBool = false
-        for (var j = 0; j < hostsGroups.length; j++) {
+        for (let j = 0; j < hostsGroups.length; j++) {
             if (contracts[i].lat == hostsGroups[j][0].lat && contracts[i].lon == hostsGroups[j][0].lon && contracts[i].as == hostsGroups[j][0].as) { // Checking if geolocation is the same as the first element in a group. Has to match the ISP too
                 hostsGroups[j].push(contracts[i]) // Add host to the group
                 hostInGroupBool = true
@@ -506,14 +504,14 @@ function processHosts(siastatsFarms, contracts) {
         farm: "Geolocation unavailable",
         hosts: []
     }]
-    for (var j = 0; j < hostsGroups.length; j++) {
+    for (let j = 0; j < hostsGroups.length; j++) {
         if (hostsGroups[j].length > 1) { // Only groups with more than one member: hosting farms
             var farmEntry = {
                 farm: "User-identified farm #U-" + (farmNumber),
                 hosts: []
             }
-            for (var k = 0; k < hostsGroups[j].length; k++) {
-                var hostEntry = {
+            for (let k = 0; k < hostsGroups[j].length; k++) {
+                let hostEntry = {
                     ip: hostsGroups[j][k].netaddress,
                     contract: hostsGroups[j][k].id,
                     cost: parseFloat((hostsGroups[j][k].totalcost/1000000000000000000000000).toFixed(2)),
@@ -549,7 +547,7 @@ function processHosts(siastatsFarms, contracts) {
             
         
         } else { // Individual hosts
-            var hostEntry = {
+            let hostEntry = {
                 ip: hostsGroups[j][0].netaddress,
                 contract: hostsGroups[j][0].id,
                 cost: parseFloat((hostsGroups[j][0].totalcost/1000000000000000000000000).toFixed(2)),
@@ -572,7 +570,7 @@ function siastatsProcess(farmList, contracts, siastatsFarms) {
     // A - Create a temporal array where we add contracts not yet assigned, and belonging to farms, to groups
     // Iterate on the list of farms, on each host of it
     var extraGroups = []
-    for (var j = 0; j < siastatsFarms.length; j++) {
+    for (let j = 0; j < siastatsFarms.length; j++) {
         extraGroups.push({ // Adding an empty sub-array. We will fill it with contracts if positive for a farm
             farm: siastatsFarms[j].farm,
             hosts: []
@@ -584,9 +582,9 @@ function siastatsProcess(farmList, contracts, siastatsFarms) {
             extraGroups[extraGroups.length-1].message = siastatsFarms[j].message
         }
 
-        for (var k = 0; k < siastatsFarms[j].hosts.length; k++) {
+        for (let k = 0; k < siastatsFarms[j].hosts.length; k++) {
             // Iterate on the list of contracts not yet assigned to a farm
-            for (var i = 0; i< contracts.length; i++) {
+            for (let i = 0; i< contracts.length; i++) {
                 if (contracts[i].assigned != true && siastatsFarms[j].hosts[k].pubkey == contracts[i].hostpublickey.key){ // Match of public keys: the host is in a farm!
                     extraGroups[j].hosts.push(contracts[i])
                 }
@@ -596,11 +594,11 @@ function siastatsProcess(farmList, contracts, siastatsFarms) {
     
     // B - Assign these groups to farms already identified (farmsList). Add a flag about SiaStats
     // Iterate on the farmList to find matches with the siaStats database. If a match, we will iterate on extraGroups and add hosts if they match the farm ID
-    for (var i = 0; i < farmList.length; i++) {
-        for (var j = 0; j < farmList[i].hosts.length; j++) {
+    for (let i = 0; i < farmList.length; i++) {
+        for (let j = 0; j < farmList[i].hosts.length; j++) {
 
             // Iterating on siastatsFarms
-            for (var k = 0; k < siastatsFarms.length; k++) {
+            for (let k = 0; k < siastatsFarms.length; k++) {
                 for (var l = 0; l < siastatsFarms[k].hosts.length; l++) {
                     if (farmList[i].hosts[j].pubkey == siastatsFarms[k].hosts[l].pubkey) { // Matched farm
                         
@@ -640,14 +638,14 @@ function siastatsProcess(farmList, contracts, siastatsFarms) {
     }
 
     // C - Push unassigned groupd with 2+ contracts to a new farm
-    for (var i = 0; i < extraGroups.length; i++) {
+    for (let i = 0; i < extraGroups.length; i++) {
         if (extraGroups[i].hosts.length >= 2) {
             // Initializing new entry
-            newEntry = {
+            let newEntry = {
                 farm: "SiaStats ID-" + extraGroups[i].farm,
                 hosts: []
             }
-            for (var j = 0; j < extraGroups[i].hosts.length; j++) { // For each host in the group
+            for (let j = 0; j < extraGroups[i].hosts.length; j++) { // For each host in the group
                 newEntry.hosts.push({
                     ip: extraGroups[i].hosts[j].netaddress,
                     contract: extraGroups[i].hosts[j].id,
@@ -686,12 +684,12 @@ function openSettingsFile(foundContractsBool) {
 
     // Opening settings file
     fs.readFile(path.join(__dirname, "../databases/settings.json"), 'utf8', function (err, data) { if (!err) { 
-        var settings = JSON.parse(data)
+        let settings = JSON.parse(data)
         settings.lastsync = timestamp
         getConsensusHeight(settings, foundContractsBool)
     } else {
         // Initialize a settings file here
-        var settings = {
+        let settings = {
             userLon: null,
             userLat: null,
             lastsync: timestamp,
@@ -805,9 +803,9 @@ function cancelFarms() {
 
             // Finding the checkboxes number
             var checkBoxes = []
-            for (var i = 1; i < farms.length; i++) {
-                for (var j = 0; j < farms[i].hosts.length; j++) {
-                    for (var k = 0; k < contracts.length; k++) {
+            for (let i = 1; i < farms.length; i++) {
+                for (let j = 0; j < farms[i].hosts.length; j++) {
+                    for (let k = 0; k < contracts.length; k++) {
                         if (farms[i].hosts[j].contract == contracts[k].id) {
                             var checkHost = "checkFarm" + k
                             if (document.getElementById(checkHost).checked == true) {
@@ -857,9 +855,9 @@ function preCancelFarm() {
 
             // Finding the checkboxes number, and adding the contracts to an array
             var contractsToRemove = []
-            for (var i = 1; i < farms.length; i++) {
-                for (var j = 0; j < farms[i].hosts.length; j++) {
-                    for (var k = 0; k < contracts.length; k++) {
+            for (let i = 1; i < farms.length; i++) {
+                for (let j = 0; j < farms[i].hosts.length; j++) {
+                    for (let k = 0; k < contracts.length; k++) {
                         if (farms[i].hosts[j].contract == contracts[k].id) {
                             var checkHost = "checkFarm" + k
                             if (document.getElementById(checkHost).checked == true) {
@@ -904,7 +902,7 @@ function cancelContracts() {
     var contractsNumToRemove = []
     fs.readFile(path.join(__dirname, "../databases/contracts.json"), 'utf8', function (err, data) { if (!err) { 
         var contracts = JSON.parse(data);
-        for (var i = 0; i < contracts.length; i++) {
+        for (let i = 0; i < contracts.length; i++) {
             if (document.getElementById("checkContract" + i).checked == true) {
                 contractsNumToRemove.push(i)
             }
@@ -944,7 +942,7 @@ function preCancel() {
         var contracts = JSON.parse(data);
 
         var contractsToRemove = []
-        for (var i = 0; i < contracts.length; i++) {
+        for (let i = 0; i < contracts.length; i++) {
             if (document.getElementById("checkContract" + i).checked == true) {
                 contractsToRemove.push({
                     ip: contracts[i].netaddress,
@@ -993,7 +991,7 @@ function cancelContract(contractNum, contractsToRemove, attempt, contracts) {
         document.getElementById("overlayMessage").innerHTML = "Contract removed:<br>" + contractsToRemove[contractNum].ip
 
         // Remove contract from list
-        for (var j = 0; j < contracts.length; j++) {
+        for (let j = 0; j < contracts.length; j++) {
             if (contracts[j].id == contractsToRemove[contractNum].contract) {
                 contracts.splice(j,1) // Removes the contract from the array
                 
@@ -1038,8 +1036,8 @@ function findAndRemoveContractFromFarm(contractId) {
     fs.readFile(path.join(__dirname, "../databases/farms.json"), 'utf8', function (err, data) { if (!err) { 
         var farms = JSON.parse(data);
 
-        for (var i = 0; i < farms.length; i++) {
-            for (var j = 0; j < farms[i].hosts.length; j++) {
+        for (let i = 0; i < farms.length; i++) {
+            for (let j = 0; j < farms[i].hosts.length; j++) {
                 if (contractId == farms[i].hosts[j].contract) {
                     farms[i].hosts.splice(j,1)
                     
@@ -1080,16 +1078,16 @@ function preFilter() {
                     // Checking and correcting list, to avoid tampering of alerts
                     
                     var farmsFlagged = 0
-                    for (var i = 0; i < farms.length; i++) {
+                    for (let i = 0; i < farms.length; i++) {
                         if (farms[i].alert == true) {farmsFlagged++}
                     }
                     // This will need to be changed for Hyperspace and Prime (farmsFlagged)
                     if ((newMode == "whitelist" || newMode == "blacklist") && farmsFlagged > 0) {
 
-                        for (var i = 0; i < hosts.length; i++) { // Each host
-                            for (var j = 0; j < farms.length; j++) { // Each farm
+                        for (let i = 0; i < hosts.length; i++) { // Each host
+                            for (let j = 0; j < farms.length; j++) { // Each farm
                                 if (farms[j].alert == true) {
-                                    for (var k = 0; k < farms[j].hosts.length; k++) { // Each host in a farm
+                                    for (let k = 0; k < farms[j].hosts.length; k++) { // Each host in a farm
                                         if (farms[j].hosts[k].pubkey == hosts[i].publickey.key) {
                                             hosts[i].alert = true
                                         }
@@ -1098,7 +1096,7 @@ function preFilter() {
                             }
                         }
 
-                        for (var i = 0; i < hosts.length; i++) {
+                        for (let i = 0; i < hosts.length; i++) {
                             if (newMode == "blacklist") {
                                 if (hosts[i].onList != true && hosts[i].alert == true) {
                                     hosts[i].onList = true
@@ -1116,7 +1114,7 @@ function preFilter() {
 
                         // Preparing the array of the Filter
                         var list = []
-                        for (var i = 0; i < hosts.length; i++) {
+                        for (let i = 0; i < hosts.length; i++) {
                             if (hosts[i].onList == true) {
                                 list.push({
                                     ip: hosts[i].netaddress,
@@ -1125,17 +1123,18 @@ function preFilter() {
                                 })
                             }
                         }
+                        let availableHosts
                         if (newMode == "whitelist") {
-                            var availableHosts = list.length
+                            availableHosts = list.length
                         } else if (newMode == "blacklist") {
-                            var availableHosts = hosts.length - list.length
+                            availableHosts = hosts.length - list.length
                         }
 
                         // Checking how many contracts will be cancelled
                         var contractsToCancel = 0
-                        for (var i = 0; i < contracts.length; i++) {
+                        for (let i = 0; i < contracts.length; i++) {
                             var matchContract = false
-                            for (var j = 0; j < list.length; j++) {
+                            for (let j = 0; j < list.length; j++) {
                                 // Depending on the mode
                                 if (newMode == "blacklist") {
                                     if (contracts[i].hostpublickey.key == list[j].key) {
@@ -1155,7 +1154,7 @@ function preFilter() {
 
                         document.getElementById("overlayMessage").innerHTML = "After applying this Filter, " + availableHosts + " hosts will be available to form"
                             + "<br>contracts with. " + contractsToCancel + " current contracts will be cancelled. Proceed?"
-                        var button = '<button type="button" class="button-scan" style="width: 150px; height: 35px; vertical-align: middle; cursor: pointer; margin: 25px 10px 0px 0px" onclick="closeOverlay()">'
+                        let button = '<button type="button" class="button-scan" style="width: 150px; height: 35px; vertical-align: middle; cursor: pointer; margin: 25px 10px 0px 0px" onclick="closeOverlay()">'
                             + 'No</button>'
                             + '<button type="button" class="button-scan" style="width: 150px; height: 35px; vertical-align: middle; cursor: pointer; margin: 25px 0px 0px 10px" onclick="applyFilter()">'
                             + 'Yes</button>'
@@ -1165,7 +1164,7 @@ function preFilter() {
                     } else if (newMode == "disable") {
                         // Disable mode
                         document.getElementById("overlayMessage").innerHTML = "The hosts filter will be disabled. Proceed?"
-                        var button = '<button type="button" class="button-scan" style="width: 150px; height: 35px; vertical-align: middle; cursor: pointer; margin: 25px 10px 0px 0px" onclick="closeOverlay()">'
+                        let button = '<button type="button" class="button-scan" style="width: 150px; height: 35px; vertical-align: middle; cursor: pointer; margin: 25px 10px 0px 0px" onclick="closeOverlay()">'
                             + 'No</button>'
                             + '<button type="button" class="button-scan" style="width: 150px; height: 35px; vertical-align: middle; cursor: pointer; margin: 25px 0px 0px 10px" onclick="applyFilter()">'
                             + 'Yes</button>'
@@ -1207,7 +1206,7 @@ function applyFilter() {
 
             // Preparing the array of the Filter
             var list = []
-            for (var i = 0; i < hosts.length; i++) {
+            for (let i = 0; i < hosts.length; i++) {
                 if (hosts[i].onList == true) {
                     list.push({
                         ip: hosts[i].netaddress,
@@ -1234,7 +1233,7 @@ function siaFilter(list, newMode) {
     document.getElementById("overlayMessage").innerHTML = "Connecting to Sia"
 
     var hostsList = []
-    for (var i = 0; i < list.length; i++) {
+    for (let i = 0; i < list.length; i++) {
         hostsList.push(list[i].pubkey)
     }
 
